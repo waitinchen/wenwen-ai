@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%
+  }
+
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%
+  }
+}
+
+/* 隨藏 MiniMax 浮水印 - 增強版本 */
+[class*="minimax"],
+[class*="MiniMax"],
+[class*="MINIMAX"],
+[id*="minimax"],
+[id*="MiniMax"],
+[id*="MINIMAX"],
+.watermark,
+.brand-watermark,
+.powered-by-minimax,
+.minimax-brand,
+.minimax-logo,
+div[style*="position: fixed"][style*="bottom"][style*="right"],
+div[style*="position: absolute"][style*="bottom"][style*="right"],
+div[style*="position: fixed"][style*="bottom: 10px"],
+div[style*="position: fixed"][style*="right: 10px"],
+div[style*="z-index: 9999"],
+div[style*="z-index: 999999"],
+/* 直接目標常見的浮水印位置 */
+body > div[style*="position: fixed"][style*="bottom: 10px"][style*="right: 10px"],
+body > div[style*="position: fixed"][style*="bottom: 20px"][style*="right: 20px"],
+body > div[style*="position: fixed"][style*="bottom: 0"][style*="right: 0"],
+html > div[style*="position: fixed"][style*="bottom"],
+#root > div[style*="position: fixed"][style*="bottom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  z-index: -9999 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 隨藏可能的底部右下角浮水印 */
+body::after,
+html::after,
+#root::after,
+body > *:last-child[style*="position: fixed"],
+html > *:last-child[style*="position: fixed"] {
+  display: none !important;
+}
+
+/* 增加的安全措施 - 直接目標MiniMax相關內容 */
+*[data-testid*="minimax"],
+*[data-name*="minimax"],
+*[aria-label*="minimax"],
+*[title*="minimax"],
+*[alt*="minimax"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+img {
+  object-position: top;
+}
+
+.fixed {
+  position: fixed;
+}
