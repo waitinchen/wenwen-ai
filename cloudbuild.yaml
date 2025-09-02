@@ -1,0 +1,54 @@
+# Google Cloud Build 配置文件
+steps:
+  # 構建 Docker 映像檔
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/wenshan-chatbot:$BUILD_ID'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/wenshan-chatbot:latest'
+      - '.'
+
+  # 推送映像檔到 Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/wenshan-chatbot:$BUILD_ID'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/wenshan-chatbot:latest'
+
+  # 部署到 Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wenshan-chatbot'
+      - '--image=gcr.io/$PROJECT_ID/wenshan-chatbot:$BUILD_ID'
+      - '--region=asia-east1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--max-instances=10'
+      - '--port=8080'
+      - '--set-env-vars=NODE_ENV=production'
+
+# 構建選項
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# 構建標籤
+tags:
+  - 'wenshan-chatbot'
+  - 'react-app'
+
+# 構建完成後保留的映像檔
+images:
+  - 'gcr.io/$PROJECT_ID/wenshan-chatbot:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/wenshan-chatbot:latest'
