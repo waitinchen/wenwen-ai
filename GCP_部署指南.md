@@ -49,14 +49,20 @@ ls -la Dockerfile nginx.conf cloudbuild.yaml
 ```
 
 ### 步驟3：環境變數配置
-創建 `.env.production` 檔案：
+創建 `.env.production` 檔案（建議透過 Secret Manager 取得金鑰）：
 ```bash
-cat > .env.production << EOF
-VITE_SUPABASE_URL=https://yxdjxiseovgnangemrip.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpUVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4ZGp4aXNlb3ZnbmFuZ2VtcmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNjg1NDMsImV4cCI6MjA3MTc0NDU0M30.d1J8Kv_l3M_Qy6QT2OcBJx9OiB2vKLl6aUgOlj2RYq8
+# 從 Secret Manager 或其他安全存放服務讀取金鑰
+export SUPABASE_URL=$(gcloud secrets versions access latest --secret=SUPABASE_URL)
+export SUPABASE_ANON_KEY=$(gcloud secrets versions access latest --secret=SUPABASE_ANON_KEY)
+
+cat > .env.production <<EOF
+VITE_SUPABASE_URL=$SUPABASE_URL
+VITE_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 NODE_ENV=production
 EOF
 ```
+
+> ⚠️ 切勿在文件或版本控制中硬編碼實際金鑰，請改用 Secret Manager 或 CI/CD 的變數管理。
 
 ### 步驟4：使用Cloud Build自動部署
 ```bash
