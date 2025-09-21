@@ -14,11 +14,20 @@ Deno.serve(async (req) => {
     try {
         const { action, content, contentType, sourceTable, sourceId, batchCheck } = await req.json();
         
-        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
         const supabaseUrl = Deno.env.get('SUPABASE_URL');
-        
+
         if (!serviceRoleKey || !supabaseUrl) {
-            throw new Error('Supabase配置缺失');
+            console.error('Supabase service role credentials are missing');
+            return new Response(JSON.stringify({
+                error: {
+                    code: 'CONFIGURATION_ERROR',
+                    message: 'Supabase service role credentials are not configured'
+                }
+            }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
         }
 
         const headers = {
