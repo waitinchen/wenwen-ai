@@ -1,55 +1,131 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://yxdjxiseovgnangemrip.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4ZGp4aXNlb3ZnbmFuZ2VtcmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMTA3MzUsImV4cCI6MjA3MTY4NjczNX0.yzz9-sbYvm-y9oxHalSpEcc0Mo8pvaH8l6I4ZXy3Rh4'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-export type Store = {
-  id: number
-  store_name: string
-  owner?: string
-  role?: string
-  category?: string
-  address?: string
-  phone?: string
-  business_hours?: string
-  services?: string
-  features?: string
-  is_safe_store: boolean
-  has_member_discount: boolean
-  facebook_url?: string
-  website_url?: string
-  created_at: string
-  updated_at: string
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
 }
 
-export type FAQ = {
-  id: number
-  question: string
-  answer: string
-  category?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+})
 
-export type ChatMessage = {
-  id: number
-  session_id: string
-  message_type: 'user' | 'bot'
-  content: string
-  is_helpful?: boolean
-  created_at: string
-}
-
-export type BusinessInfo = {
-  id: number
-  info_type: string
-  title: string
-  content: string
-  is_active: boolean
-  display_order: number
-  created_at: string
-  updated_at: string
+// 類型定義
+export type Database = {
+  public: {
+    Tables: {
+      line_users: {
+        Row: {
+          id: number
+          line_uid: string
+          line_display_name: string
+          line_avatar_url: string | null
+          is_active: boolean
+          first_interaction_at: string
+          last_interaction_at: string
+          total_conversations: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          line_uid: string
+          line_display_name: string
+          line_avatar_url?: string | null
+          is_active?: boolean
+          first_interaction_at?: string
+          last_interaction_at?: string
+          total_conversations?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          line_uid?: string
+          line_display_name?: string
+          line_avatar_url?: string | null
+          is_active?: boolean
+          first_interaction_at?: string
+          last_interaction_at?: string
+          total_conversations?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      chat_sessions: {
+        Row: {
+          id: number
+          session_id: string
+          user_ip: string | null
+          user_agent: string | null
+          line_user_id: number | null
+          started_at: string
+          last_activity: string
+          message_count: number
+        }
+        Insert: {
+          id?: number
+          session_id: string
+          user_ip?: string | null
+          user_agent?: string | null
+          line_user_id?: number | null
+          started_at?: string
+          last_activity?: string
+          message_count?: number
+        }
+        Update: {
+          id?: number
+          session_id?: string
+          user_ip?: string | null
+          user_agent?: string | null
+          line_user_id?: number | null
+          started_at?: string
+          last_activity?: string
+          message_count?: number
+        }
+      }
+      chat_messages: {
+        Row: {
+          id: number
+          session_id: number
+          message_type: 'user' | 'bot' | 'system'
+          message_text: string
+          response_time: number | null
+          user_feedback: number | null
+          created_at: string
+          metadata: any | null
+        }
+        Insert: {
+          id?: number
+          session_id: number
+          message_type?: 'user' | 'bot' | 'system'
+          message_text: string
+          response_time?: number | null
+          user_feedback?: number | null
+          created_at?: string
+          metadata?: any | null
+        }
+        Update: {
+          id?: number
+          session_id?: number
+          message_type?: 'user' | 'bot' | 'system'
+          message_text?: string
+          response_time?: number | null
+          user_feedback?: number | null
+          created_at?: string
+          metadata?: any | null
+        }
+      }
+    }
+  }
 }

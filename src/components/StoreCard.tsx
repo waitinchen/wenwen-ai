@@ -1,7 +1,29 @@
 import React from 'react'
 import { MapPin, Phone, Clock, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Store } from '@/lib/supabase'
+// 定義 Store 類型
+interface Store {
+  id: number
+  name: string
+  store_name: string
+  address: string
+  phone: string
+  business_hours: string
+  rating: number
+  image_url?: string
+  description?: string
+  is_active: boolean
+  is_safe_store?: boolean
+  has_member_discount?: boolean
+  category?: string
+  role?: string
+  services?: string
+  features?: string
+  facebook_url?: string
+  website_url?: string
+  created_at: string
+  updated_at: string
+}
 
 interface StoreCardProps {
   store: Store
