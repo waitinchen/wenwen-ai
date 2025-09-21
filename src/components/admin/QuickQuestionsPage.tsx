@@ -1,43 +1,55 @@
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import QuickQuestionsManager from './QuickQuestionsManager'
-import {
-  getQuickQuestions,
-  createQuickQuestion,
-  updateQuickQuestion,
-  deleteQuickQuestion,
-  bulkUpdateQuickQuestions
-} from '@/lib/api'
+import type { QuickQuestionInput, QuickQuestionRecord } from '@/lib/api'
+import { useQuickQuestions } from '@/hooks/useQuickQuestions'
 
-interface QuickQuestion {
-  id: number
-  question: string
-  display_order: number
-  is_enabled: boolean
-  created_at: string
-  updated_at: string
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!error) return fallback
+  if (error instanceof Error) {
+    return error.message || fallback
+  }
+  if (typeof error === 'string') return error
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return fallback
+  }
 }
 
+const createInitialFormState = (nextDisplayOrder: number): QuickQuestionInput => ({
+  question: '',
+  display_order: Math.max(1, nextDisplayOrder),
+  is_enabled: true
+})
+
 const QuickQuestionsPage = () => {
-  const [questions, setQuestions] = useState<QuickQuestion[]>([])
-  const [loading, setLoading] = useState(false)
+  const {
+    questions,
+    isLoading,
+    isRefreshing,
+    error: queryError,
+    createQuickQuestion,
+    updateQuickQuestion,
+    deleteQuickQuestion,
+    isMutating
+  } = useQuickQuestions()
+
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
-  // 搜索和編輯狀態
+
   const [searchTerm, setSearchTerm] = useState('')
-  const [editingItem, setEditingItem] = useState<QuickQuestion | null>(null)
+  const [editingItem, setEditingItem] = useState<QuickQuestionRecord | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
-  
-  // 表單數據
-  const [formData, setFormData] = useState({
-    question: '',
-    display_order: 1,
-    is_enabled: true
-  })
+
+  const nextDisplayOrder = useMemo(() => questions.length + 1, [questions.length])
+
+  const [formData, setFormData] = useState<QuickQuestionInput>(createInitialFormState(nextDisplayOrder))
 
   useEffect(() => {
-    loadQuestions()
-  }, [])
+    if (queryError) {
+      setError(getErrorMessage(queryError, '載入快速問題失敗'))
+    }
+  }, [queryError])
 
   useEffect(() => {
     if (success) {
@@ -53,69 +65,71 @@ const QuickQuestionsPage = () => {
     }
   }, [error])
 
-  const loadQuestions = async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const data = await getQuickQuestions()
-      setQuestions(data || [])
-    } catch (err: any) {
-      setError(err.message || '載入快速問題失敗')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (!showAddForm && !editingItem) {
+      setFormData(createInitialFormState(nextDisplayOrder))
     }
-  }
+  }, [editingItem, nextDisplayOrder, showAddForm])
 
-  const handleSave = async () => {
-    try {
-      setLoading(true)
-      setError('')
-      
-      if (editingItem) {
-        // 更新
-        await updateQuickQuestion(editingItem.id, formData)
-        setSuccess('快速問題更新成功')
-        setEditingItem(null)
-      } else {
-        // 新增
-        await createQuickQuestion(formData)
-        setSuccess('快速問題新增成功')
-        setShowAddForm(false)
-      }
-      
-      // 重新載入資料
-      await loadQuestions()
-      
-      // 重置表單
-      setFormData({
-        question: '',
-        display_order: 1,
-        is_enabled: true
-      })
-    } catch (err: any) {
-      setError(err.message || '儲存失敗')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const resetEditorState = useCallback(() => {
+    setEditingItem(null)
+    setShowAddForm(false)
+    setFormData(createInitialFormState(nextDisplayOrder))
+  }, [nextDisplayOrder])
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('確定要刪除此快速問題嗎？')) {
+  const handleSave = useCallback(async () => {
+    if (!formData.question.trim()) {
+      setError('快速問題內容不能為空')
       return
     }
-    
+
     try {
-      setLoading(true)
       setError('')
-      await deleteQuickQuestion(id)
-      setSuccess('快速問題刪除成功')
-      await loadQuestions()
-    } catch (err: any) {
-      setError(err.message || '刪除失敗')
-    } finally {
-      setLoading(false)
+      if (editingItem) {
+        await updateQuickQuestion(editingItem.id, formData)
+        setSuccess('快速問題更新成功')
+      } else {
+        await createQuickQuestion(formData)
+        setSuccess('快速問題新增成功')
+      }
+      resetEditorState()
+    } catch (err) {
+      setError(getErrorMessage(err, '儲存失敗'))
     }
-  }
+  }, [createQuickQuestion, editingItem, formData, resetEditorState, updateQuickQuestion])
+
+  const handleDelete = useCallback(
+    async (id: number) => {
+      if (!confirm('確定要刪除此快速問題嗎？')) {
+        return
+      }
+
+      try {
+        setError('')
+        await deleteQuickQuestion(id)
+        setSuccess('快速問題刪除成功')
+      } catch (err) {
+        setError(getErrorMessage(err, '刪除失敗'))
+      }
+    },
+    [deleteQuickQuestion]
+  )
+
+  const handleStartEdit = useCallback((item: QuickQuestionRecord) => {
+    setEditingItem(item)
+    setShowAddForm(false)
+    setFormData({
+      question: item.question,
+      display_order: item.display_order,
+      is_enabled: item.is_enabled
+    })
+  }, [])
+
+  const handleStartAdd = useCallback(() => {
+    setEditingItem(null)
+    setShowAddForm(true)
+    setFormData(createInitialFormState(nextDisplayOrder))
+  }, [nextDisplayOrder])
 
   return (
     <div className="space-y-6">
@@ -131,26 +145,41 @@ const QuickQuestionsPage = () => {
           <div className="text-sm text-red-600">{error}</div>
         </div>
       )}
-      
+
       {success && (
         <div className="bg-green-50 border border-green-200 rounded-md p-4">
           <div className="text-sm text-green-600">{success}</div>
         </div>
       )}
-      
+
+      {isRefreshing && !isLoading && (
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#06C755]" />
+          正在同步最新的快速問題資料...
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 text-center text-sm text-gray-500">
+          正在載入快速問題...
+        </div>
+      )}
+
       <QuickQuestionsManager
         questions={questions}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         showAddForm={showAddForm}
-        setShowAddForm={setShowAddForm}
         editingItem={editingItem}
-        setEditingItem={setEditingItem}
         formData={formData}
         setFormData={setFormData}
         handleSave={handleSave}
         handleDelete={handleDelete}
-        loading={loading}
+        loading={isMutating}
+        onStartAdd={handleStartAdd}
+        onStartEdit={handleStartEdit}
+        onCloseEditor={resetEditorState}
+        isRefreshing={isRefreshing}
       />
     </div>
   )

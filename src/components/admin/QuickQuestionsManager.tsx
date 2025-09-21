@@ -1,19 +1,22 @@
 import React from 'react'
-import { Plus, Search, Edit, Trash2, Save, X, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Save, X } from 'lucide-react'
+import type { QuickQuestionInput, QuickQuestionRecord } from '@/lib/api'
 
 interface QuickQuestionsManagerProps {
-  questions: any[]
+  questions: QuickQuestionRecord[]
   searchTerm: string
   setSearchTerm: (term: string) => void
   showAddForm: boolean
-  setShowAddForm: (show: boolean) => void
-  editingItem: any
-  setEditingItem: (item: any) => void
-  formData: any
-  setFormData: (data: any) => void
+  editingItem: QuickQuestionRecord | null
+  formData: QuickQuestionInput
+  setFormData: React.Dispatch<React.SetStateAction<QuickQuestionInput>>
   handleSave: () => void
   handleDelete: (id: number) => void
   loading: boolean
+  onStartAdd: () => void
+  onStartEdit: (item: QuickQuestionRecord) => void
+  onCloseEditor: () => void
+  isRefreshing: boolean
 }
 
 const QuickQuestionsManager = ({
@@ -21,36 +24,24 @@ const QuickQuestionsManager = ({
   searchTerm,
   setSearchTerm,
   showAddForm,
-  setShowAddForm,
   editingItem,
-  setEditingItem,
   formData,
   setFormData,
   handleSave,
   handleDelete,
-  loading
+  loading,
+  onStartAdd,
+  onStartEdit,
+  onCloseEditor,
+  isRefreshing
 }: QuickQuestionsManagerProps) => {
-  const startEdit = (item: any) => {
-    setEditingItem(item)
-    setFormData({
-      question: item.question,
-      display_order: item.display_order,
-      is_enabled: item.is_enabled
-    })
-  }
-
-  const startAdd = () => {
-    setShowAddForm(true)
-    setFormData({
-      question: '',
-      display_order: questions.length + 1,
-      is_enabled: true
-    })
-  }
-
-  const filteredQuestions = questions.filter(q => 
+  const filteredQuestions = questions.filter(q =>
     q.question.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const handleCloseEditor = () => {
+    onCloseEditor()
+  }
 
   return (
     <div className="space-y-6">
@@ -69,7 +60,7 @@ const QuickQuestionsManager = ({
           </div>
         </div>
         <button
-          onClick={startAdd}
+          onClick={onStartAdd}
           className="flex items-center gap-2 px-4 py-2 bg-[#06C755] text-white rounded-lg hover:bg-[#04A047] transition-colors"
         >
           <Plus size={20} />
@@ -98,18 +89,18 @@ const QuickQuestionsManager = ({
                   {question.display_order}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    question.is_enabled 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      question.is_enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {question.is_enabled ? '啟用' : '禁用'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => startEdit(question)}
+                      onClick={() => onStartEdit(question)}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       <Edit size={16} />
@@ -136,18 +127,11 @@ const QuickQuestionsManager = ({
               <h3 className="text-lg font-medium text-gray-900">
                 {editingItem ? '編輯快速問題' : '新增快速問題'}
               </h3>
-              <button
-                onClick={() => {
-                  setShowAddForm(false)
-                  setEditingItem(null)
-                  setFormData({})
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
+              <button onClick={handleCloseEditor} className="text-gray-400 hover:text-gray-600">
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">問題內容</label>
@@ -159,18 +143,22 @@ const QuickQuestionsManager = ({
                   placeholder="輸入快速問題內容..."
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">顯示順序</label>
                 <input
                   type="number"
                   value={formData.display_order || 1}
-                  onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    const parsedValue = parseInt(e.target.value, 10)
+                    const displayOrder = Number.isNaN(parsedValue) ? 1 : Math.max(1, parsedValue)
+                    setFormData({ ...formData, display_order: displayOrder })
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#06C755]"
                   min={1}
                 />
               </div>
-              
+
               <div>
                 <label className="flex items-center gap-2">
                   <input
@@ -183,14 +171,10 @@ const QuickQuestionsManager = ({
                 </label>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => {
-                  setShowAddForm(false)
-                  setEditingItem(null)
-                  setFormData({})
-                }}
+                onClick={handleCloseEditor}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 取消
@@ -200,7 +184,9 @@ const QuickQuestionsManager = ({
                 disabled={loading || !formData.question}
                 className="px-4 py-2 bg-[#06C755] text-white rounded-md hover:bg-[#04A047] disabled:bg-gray-300 flex items-center gap-2"
               >
-                {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                {(loading || isRefreshing) && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                )}
                 <Save size={16} />
                 保存
               </button>

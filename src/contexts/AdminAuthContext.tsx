@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { adminVerifyToken, adminLogout, type AdminLoginData } from '@/lib/api'
+import {
+  adminVerifyToken,
+  adminLogout,
+  type AdminLoginData,
+  getStoredAdminToken,
+  storeAdminToken,
+  clearStoredAdminToken
+} from '@/lib/api'
 
 interface AdminAuthContextType {
   admin: AdminLoginData['admin'] | null
@@ -32,27 +39,22 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [permissions, setPermissions] = useState<string[]>([])
 
-  // 讀取權限清單
   const hasPermission = (permission: string): boolean => {
     if (!permissions || permissions.length === 0) return false
-    
-    // 超級管理員擁有所有權限
+
     if (admin?.role === 'superadmin') return true
-    
-    // 直接匹配
+
     if (permissions.includes(permission)) return true
-    
-    // 模糊匹配（例如 'faq:manage' 匹配 'faq:*'）
+
     const permissionBase = permission.split(':')[0]
     return permissions.some(p => p.startsWith(`${permissionBase}:`))
   }
 
-  // 載入時檢查本地存儲的token
   useEffect(() => {
     async function loadStoredAuth() {
       setIsLoading(true)
       try {
-        const storedToken = localStorage.getItem('admin_token')
+        const storedToken = getStoredAdminToken()
         if (storedToken) {
           const authData = await adminVerifyToken(storedToken)
           setAdmin(authData.admin)
@@ -61,7 +63,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
         }
       } catch (error) {
         console.error('Token verification failed:', error)
-        localStorage.removeItem('admin_token')
+        clearStoredAdminToken()
       } finally {
         setIsLoading(false)
       }
@@ -74,7 +76,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
     setAdmin(adminData.admin)
     setToken(adminData.token)
     setPermissions(adminData.admin.permissions || [])
-    localStorage.setItem('admin_token', adminData.token)
+    storeAdminToken(adminData.token)
   }
 
   const logout = async () => {
@@ -88,23 +90,25 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       setAdmin(null)
       setToken(null)
       setPermissions([])
-      localStorage.removeItem('admin_token')
+      clearStoredAdminToken()
     }
   }
 
   const isAuthenticated = !!(admin && token)
 
   return (
-    <AdminAuthContext.Provider value={{
-      admin,
-      token,
-      isLoading,
-      permissions,
-      hasPermission,
-      login,
-      logout,
-      isAuthenticated
-    }}>
+    <AdminAuthContext.Provider
+      value={{
+        admin,
+        token,
+        isLoading,
+        permissions,
+        hasPermission,
+        login,
+        logout,
+        isAuthenticated
+      }}
+    >
       {children}
     </AdminAuthContext.Provider>
   )
