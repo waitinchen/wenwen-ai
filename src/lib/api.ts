@@ -900,18 +900,30 @@ export async function deleteTrainingData(id: number) {
 export async function createStore(store: any) {
   console.log('createStore called with store:', store)
   
-  // 確保布林值正確處理
+  // 強化布林值轉換邏輯 - 明確處理各種輸入類型
+  const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
+    if (value === true || value === 'true' || value === 1 || value === '1') return true
+    if (value === false || value === 'false' || value === 0 || value === '0') return false
+    return defaultValue
+  }
+  
   const sanitizedStore = {
     ...store,
-    is_partner_store: Boolean(store.is_partner_store),
-    is_safe_store: Boolean(store.is_safe_store),
-    has_member_discount: Boolean(store.has_member_discount),
+    is_partner_store: sanitizeBoolean(store.is_partner_store, false),
+    is_safe_store: sanitizeBoolean(store.is_safe_store, false),
+    has_member_discount: sanitizeBoolean(store.has_member_discount, false),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }
   
-  console.log('Sanitized store data:', sanitizedStore)
-  console.log('is_partner_store value:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  console.log('=== 建立商家布林值轉換詳情 ===')
+  console.log('原始 is_partner_store:', store.is_partner_store, typeof store.is_partner_store)
+  console.log('轉換後 is_partner_store:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  console.log('原始 is_safe_store:', store.is_safe_store, typeof store.is_safe_store)
+  console.log('轉換後 is_safe_store:', sanitizedStore.is_safe_store, typeof sanitizedStore.is_safe_store)
+  console.log('原始 has_member_discount:', store.has_member_discount, typeof store.has_member_discount)
+  console.log('轉換後 has_member_discount:', sanitizedStore.has_member_discount, typeof sanitizedStore.has_member_discount)
+  console.log('=== 轉換完成 ===')
   
   try {
     const { data, error } = await supabase
@@ -922,29 +934,63 @@ export async function createStore(store: any) {
 
     if (error) throw error
     console.log('Database create successful:', data)
-    return data
+    console.log('DB 回傳的 is_partner_store:', data.is_partner_store, typeof data.is_partner_store)
+    
+    // 確保回傳的資料包含正確的布林值
+    const responseData = {
+      ...data,
+      is_partner_store: Boolean(data.is_partner_store),
+      is_safe_store: Boolean(data.is_safe_store),
+      has_member_discount: Boolean(data.has_member_discount)
+    }
+    
+    console.log('最終回傳資料:', responseData)
+    return responseData
   } catch (error) {
     console.warn('Failed to create store in database, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { createMockStore } = await import('./mockStores')
-    return createMockStore(sanitizedStore)
+    const newStore = createMockStore(sanitizedStore)
+    
+    // 確保 mock 資料也回傳正確的布林值
+    const mockResponseData = {
+      ...newStore,
+      is_partner_store: Boolean(newStore.is_partner_store),
+      is_safe_store: Boolean(newStore.is_safe_store),
+      has_member_discount: Boolean(newStore.has_member_discount)
+    }
+    
+    console.log('Mock 最終回傳資料:', mockResponseData)
+    return mockResponseData
   }
 }
 
 export async function updateStore(id: number, store: any) {
   console.log('updateStore called with id:', id, 'store:', store)
   
-  // 確保布林值正確處理
+  // 強化布林值轉換邏輯 - 明確處理各種輸入類型
+  const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
+    if (value === true || value === 'true' || value === 1 || value === '1') return true
+    if (value === false || value === 'false' || value === 0 || value === '0') return false
+    return defaultValue
+  }
+  
   const sanitizedStore = {
     ...store,
-    is_partner_store: Boolean(store.is_partner_store),
-    is_safe_store: Boolean(store.is_safe_store),
-    has_member_discount: Boolean(store.has_member_discount),
+    is_partner_store: sanitizeBoolean(store.is_partner_store, false),
+    is_safe_store: sanitizeBoolean(store.is_safe_store, false),
+    has_member_discount: sanitizeBoolean(store.has_member_discount, false),
     updated_at: new Date().toISOString()
   }
   
-  console.log('Sanitized store data:', sanitizedStore)
-  console.log('is_partner_store value:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  console.log('=== 布林值轉換詳情 ===')
+  console.log('原始 is_partner_store:', store.is_partner_store, typeof store.is_partner_store)
+  console.log('轉換後 is_partner_store:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  console.log('原始 is_safe_store:', store.is_safe_store, typeof store.is_safe_store)
+  console.log('轉換後 is_safe_store:', sanitizedStore.is_safe_store, typeof sanitizedStore.is_safe_store)
+  console.log('原始 has_member_discount:', store.has_member_discount, typeof store.has_member_discount)
+  console.log('轉換後 has_member_discount:', sanitizedStore.has_member_discount, typeof sanitizedStore.has_member_discount)
+  console.log('=== 轉換完成 ===')
   
   try {
     const { data, error } = await supabase
@@ -956,7 +1002,18 @@ export async function updateStore(id: number, store: any) {
 
     if (error) throw error
     console.log('Database update successful:', data)
-    return data
+    console.log('DB 回傳的 is_partner_store:', data.is_partner_store, typeof data.is_partner_store)
+    
+    // 確保回傳的資料包含正確的布林值
+    const responseData = {
+      ...data,
+      is_partner_store: Boolean(data.is_partner_store),
+      is_safe_store: Boolean(data.is_safe_store),
+      has_member_discount: Boolean(data.has_member_discount)
+    }
+    
+    console.log('最終回傳資料:', responseData)
+    return responseData
   } catch (error) {
     console.warn('Failed to update store in database, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
@@ -964,12 +1021,28 @@ export async function updateStore(id: number, store: any) {
     const updatedStore = updateMockStore(id, sanitizedStore)
     if (updatedStore) {
       console.log('Updated store in mock data:', updatedStore)
-      return updatedStore
+      // 確保 mock 資料也回傳正確的布林值
+      const mockResponseData = {
+        ...updatedStore,
+        is_partner_store: Boolean(updatedStore.is_partner_store),
+        is_safe_store: Boolean(updatedStore.is_safe_store),
+        has_member_discount: Boolean(updatedStore.has_member_discount)
+      }
+      console.log('Mock 最終回傳資料:', mockResponseData)
+      return mockResponseData
     } else {
       console.warn(`Store with id ${id} not found in mock data, creating new one`)
       const newStore = createMockStore({ ...sanitizedStore, id })
       console.log('Created new store in mock data:', newStore)
-      return newStore
+      // 確保新建立的 mock 資料也回傳正確的布林值
+      const newMockResponseData = {
+        ...newStore,
+        is_partner_store: Boolean(newStore.is_partner_store),
+        is_safe_store: Boolean(newStore.is_safe_store),
+        has_member_discount: Boolean(newStore.has_member_discount)
+      }
+      console.log('新 Mock 最終回傳資料:', newMockResponseData)
+      return newMockResponseData
     }
   }
 }
