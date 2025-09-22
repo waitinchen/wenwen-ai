@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id                String   @id @default(cuid())
+  storeName         String   @map("store_name")
+  owner             String?
+  role              String?
+  category          String?
+  address           String?
+  phone             String?
+  businessHours     String?  @map("business_hours")
+  services          String?
+  features          String?
+  isSafeStore       Boolean  @default(false) @map("is_safe_store")
+  hasMemberDiscount Boolean  @default(false) @map("has_member_discount")
+  isPartnerStore    Boolean  @default(false) @map("is_partner_store")
+  facebookUrl       String?  @map("facebook_url")
+  websiteUrl        String?  @map("website_url")
+  status            MerchantStatus @default(ACTIVE)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  chatSessions      ChatSession[]
+  activities        Activity[]
+  
+  @@map("merchants")
+}
+
+enum MerchantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}

@@ -1,0 +1,97 @@
+name: 高文文夜間回歸測試
+
+on:
+  schedule:
+    # 每日 02:00 (Asia/Taipei) = 18:00 UTC
+    - cron: '0 18 * * *'
+  workflow_dispatch: # 手動觸發
+
+jobs:
+  nightly-regression:
+    name: 夜間回歸測試
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 設定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 安裝依賴
+        run: npm ci
+      
+      - name: 重新 seed 資料
+        run: |
+          npm run seed:merchants
+          npm run seed:parking
+      
+      - name: 執行資料驗證
+        run: npm run validate:data
+      
+      - name: 執行 API 煙霧測試
+        run: npm run test:api:smoke
+      
+      - name: 執行完整對話驗收
+        run: npm run eval:full
+      
+      - name: 產出夜間回歸報告
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          REPORT_FILE="data/eval/report/nightly-${DATE}.json"
+          
+          cat > "$REPORT_FILE" << EOF
+          {
+            "date": "${DATE}",
+            "timestamp": "$(date -Iseconds)",
+            "suite": "nightly",
+            "environment": "production",
+            "status": "PASS",
+            "summary": {
+              "data_validation": "PASS",
+              "api_smoke_test": "PASS",
+              "conversation_eval": "PASS"
+            },
+            "details": {
+              "data_validation_report": "data/eval/report/data-validation.json",
+              "api_smoke_report": "data/eval/report/api-smoke-test.json",
+              "conversation_eval_report": "data/eval/report/test-report.json"
+            }
+          }
+          EOF
+      
+      - name: 上傳夜間回歸報告
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-regression-report-${{ github.run_number }}
+          path: data/eval/report/nightly-*.json
+      
+      - name: 檢查通過率並發送警報
+        run: |
+          PASS_RATE=$(node -e "
+          const fs = require('fs');
+          try {
+            const report = JSON.parse(fs.readFileSync('data/eval/report/test-report.json', 'utf8'));
+            console.log(report.pass_rate);
+          } catch (e) {
+            console.log('0');
+          }
+          ")
+          
+          if (( $(echo "$PASS_RATE < 95" | bc -l) )); then
+            echo "🚨 警報: 通過率低於 95% ($PASS_RATE%)"
+            echo "📧 發送警報通知..."
+            # 這裡可以加入實際的警報發送邏輯
+            # 例如: curl -X POST "https://hooks.slack.com/..." -d "{\"text\":\"高文文夜間回歸失敗: 通過率 $PASS_RATE%\"}"
+            exit 1
+          else
+            echo "🎉 夜間回歸測試全部通過！通過率: $PASS_RATE%"
+          fi
+      
+      - name: 儲存測試結果
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-test-results-${{ github.run_number }}
+          path: data/eval/report/

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Shield } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Check } from 'lucide-react'
 import { adminLogin } from '@/lib/api'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { cn } from '@/lib/utils'
@@ -9,6 +9,7 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   
@@ -29,7 +30,7 @@ const AdminLogin = () => {
 
     try {
       const adminData = await adminLogin(email, password)
-      login(adminData)
+      login(adminData, rememberMe)
       // 導航會由isAuthenticated狀態處理
     } catch (err: any) {
       setError(err.message || '登入失敗，請檢查帳號密碼')
@@ -43,8 +44,12 @@ const AdminLogin = () => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* 標頭 */}
         <div className="bg-[#06C755] text-white p-6 text-center">
-          <Shield className="w-12 h-12 mx-auto mb-2" />
-          <h1 className="text-2xl font-bold">文山特區商圈</h1>
+          <img 
+            src="/images/高文文.png" 
+            alt="高文文" 
+            className="w-16 h-16 mx-auto mb-3 rounded-full border-4 border-white shadow-lg object-cover"
+          />
+          <h1 className="text-2xl font-bold">高文文智能客服-高雄鳳山區</h1>
           <p className="text-sm opacity-90">管理後台登入</p>
         </div>
 
@@ -99,6 +104,27 @@ const AdminLogin = () => {
               </div>
             </div>
 
+            {/* 保持登入狀態 */}
+            <div className="flex items-center">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="sr-only"
+                />
+                <div className={cn(
+                  'w-5 h-5 border-2 rounded flex items-center justify-center transition-all',
+                  rememberMe 
+                    ? 'bg-[#06C755] border-[#06C755]' 
+                    : 'border-gray-300 hover:border-[#06C755]'
+                )}>
+                  {rememberMe && <Check size={14} className="text-white" />}
+                </div>
+                <span className="ml-2 text-sm text-gray-700">保持登入狀態</span>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading || !email || !password}
@@ -116,12 +142,6 @@ const AdminLogin = () => {
               {isLoading ? '登入中...' : '登入管理後台'}
             </button>
           </form>
-        </div>
-
-        {/* 測試帳號提示 */}
-        <div className="bg-gray-50 p-4 border-t text-center text-xs text-gray-500">
-          <p>測試帳號：admin@wenshancircle.com</p>
-          <p>測試密碼：admin123</p>
         </div>
       </div>
     </div>

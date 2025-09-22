@@ -45,6 +45,7 @@ interface Store {
   features: string
   is_safe_store: boolean
   has_member_discount: boolean
+  is_partner_store: boolean
   facebook_url: string
   website_url: string
   created_at: string
@@ -66,6 +67,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showSafeStoresOnly, setShowSafeStoresOnly] = useState(false)
   const [showDiscountStoresOnly, setShowDiscountStoresOnly] = useState(false)
+  const [showPartnerStoresOnly, setShowPartnerStoresOnly] = useState(false)
   
   // 編輯狀態
   const [editingItem, setEditingItem] = useState<Store | null>(null)
@@ -85,6 +87,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
     features: '',
     is_safe_store: false,
     has_member_discount: false,
+    is_partner_store: false,
     facebook_url: '',
     website_url: ''
   })
@@ -148,6 +151,10 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
   }
 
   const handleSave = async () => {
+    console.log('handleSave called')
+    console.log('formData:', formData)
+    console.log('editingItem:', editingItem)
+    
     if (!formData.store_name.trim()) {
       setError('商家名稱不能為空')
       return
@@ -156,6 +163,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
     try {
       setLoading(true)
       setError('')
+      console.log('Starting save process...')
       
       const storeData = {
         ...formData,
@@ -163,19 +171,30 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
         updated_at: new Date().toISOString()
       }
       
+      console.log('Saving store data:', storeData)
+      console.log('is_partner_store value:', storeData.is_partner_store)
+      
+      let savedStore
       if (editingItem) {
-        await updateStore(editingItem.id, storeData)
+        savedStore = await updateStore(editingItem.id, storeData)
         setSuccess('商家資料更新成功！')
       } else {
-        await createStore(storeData)
+        savedStore = await createStore(storeData)
         setSuccess('商家資料新增成功！')
       }
+      
+      console.log('Saved store result:', savedStore)
       
       setEditingItem(null)
       setShowAddForm(false)
       resetFormData()
+      
+      // 強制重新載入數據
       await loadStores()
+      
+      console.log('Save completed successfully')
     } catch (err: any) {
+      console.error('Save failed with error:', err)
       setError(err.message || '保存失敗')
     } finally {
       setLoading(false)
@@ -196,6 +215,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
       features: store.features || '',
       is_safe_store: store.is_safe_store || false,
       has_member_discount: store.has_member_discount || false,
+      is_partner_store: store.is_partner_store || false,
       facebook_url: store.facebook_url || '',
       website_url: store.website_url || ''
     })
@@ -237,6 +257,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
       features: '',
       is_safe_store: false,
       has_member_discount: false,
+      is_partner_store: false,
       facebook_url: '',
       website_url: ''
     })
@@ -291,16 +312,28 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
     const matchesCategory = selectedCategory === 'all' || store.category === selectedCategory
     const matchesSafeStore = !showSafeStoresOnly || store.is_safe_store
     const matchesDiscount = !showDiscountStoresOnly || store.has_member_discount
+    const matchesPartner = !showPartnerStoresOnly || store.is_partner_store
     
-    return matchesSearch && matchesCategory && matchesSafeStore && matchesDiscount
+    return matchesSearch && matchesCategory && matchesSafeStore && matchesDiscount && matchesPartner
   })
 
   const stats = {
     total: stores.length,
     safeStores: stores.filter(store => store.is_safe_store).length,
     discountStores: stores.filter(store => store.has_member_discount).length,
+    partnerStores: stores.filter(store => store.is_partner_store).length,
     categories: categories.length
   }
+
+  // 調試信息
+  console.log('=== 商家管理調試信息 ===')
+  console.log('Stores data length:', stores.length)
+  console.log('Stores data:', stores)
+  console.log('Partner stores count:', stores.filter(store => store.is_partner_store).length)
+  console.log('Partner stores:', stores.filter(store => store.is_partner_store))
+  console.log('All is_partner_store values:', stores.map(store => ({ id: store.id, name: store.store_name, is_partner_store: store.is_partner_store })))
+  console.log('Stats:', stats)
+  console.log('=== 調試信息結束 ===')
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -358,6 +391,16 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
               <p className="text-2xl font-bold text-purple-600">{stats.discountStores}</p>
             </div>
             <Star className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">特約商家</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.partnerStores}</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-blue-500" />
           </div>
         </div>
         
@@ -444,6 +487,17 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
               />
               <Star className="w-4 h-4 text-purple-500" />
               <span className="text-sm text-gray-700">優惠店家</span>
+            </label>
+            
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showPartnerStoresOnly}
+                onChange={(e) => setShowPartnerStoresOnly(e.target.checked)}
+                className="rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+              />
+              <CheckCircle className="w-4 h-4 text-blue-500" />
+              <span className="text-sm text-gray-700">特約商家</span>
             </label>
           </div>
         </div>
@@ -649,6 +703,17 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
                 <Star className="w-4 h-4 text-purple-500" />
                 <span className="text-sm text-gray-700">提供會員優惠</span>
               </label>
+              
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_partner_store || false}
+                  onChange={(e) => setFormData({ ...formData, is_partner_store: e.target.checked })}
+                  className="rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+                />
+                <CheckCircle className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-700">特約商家</span>
+              </label>
             </div>
           </div>
           
@@ -725,6 +790,12 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
                               <Star className="w-3 h-3" />
                               會員優惠
+                            </span>
+                          )}
+                          {store.is_partner_store && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                              <CheckCircle className="w-3 h-3" />
+                              特約商家
                             </span>
                           )}
                           {store.category && (

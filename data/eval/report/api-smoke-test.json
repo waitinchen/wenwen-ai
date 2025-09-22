@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-09-22T09:15:10.694Z",
+  "total_tests": 11,
+  "passed_tests": 11,
+  "failed_tests": 0,
+  "tests": [
+    {
+      "endpoint": "/data/parking",
+      "description": "停車場資料載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/data/stores",
+      "description": "商家資料載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/data/faq",
+      "description": "FAQ 資料載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/config/persona",
+      "description": "Persona 配置載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/config/flows",
+      "description": "Flows 配置載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/config/version",
+      "description": "版本資訊載入",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/chat",
+      "description": "聊天 API 回應",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/stores",
+      "description": "商家管理 API 回應",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/parking",
+      "description": "停車場推薦 API 回應",
+      "status": "PASS",
+      "response": {
+        "status": 200,
+        "data": {
+          "message": "OK"
+        }
+      }
+    },
+    {
+      "endpoint": "/data/parking/integrity",
+      "description": "停車場資料完整性檢查",
+      "status": "PASS",
+      "count": 38
+    },
+    {
+      "endpoint": "/data/testset/integrity",
+      "description": "測試集資料完整性檢查",
+      "status": "PASS",
+      "count": 4
+    }
+  ]
+}

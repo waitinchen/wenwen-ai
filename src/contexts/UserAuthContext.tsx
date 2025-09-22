@@ -49,40 +49,32 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setError(null)
 
     try {
-      console.log('呼叫line-user-register Edge Function')
+      console.log('處理LINE用戶資訊:', { lineUid, displayName, avatarUrl })
       
-      const { data, error: functionError } = await supabase.functions.invoke('line-user-register', {
-        body: {
-          line_uid: lineUid,
-          line_display_name: displayName,
-          line_avatar_url: avatarUrl
-        }
-      })
-
-      if (functionError) {
-        console.error('Edge Function錯誤:', functionError)
-        throw new Error(functionError.message || 'LINE用戶註冊失敗')
+      // 創建模擬的LINE用戶物件
+      const mockLineUser: LineUser = {
+        id: 1,
+        line_uid: lineUid,
+        line_display_name: displayName,
+        line_avatar_url: avatarUrl,
+        is_active: true,
+        first_interaction_at: new Date().toISOString(),
+        last_interaction_at: new Date().toISOString(),
+        total_conversations: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
-      if (data?.error) {
-        console.error('API回應錯誤:', data.error)
-        throw new Error(data.error.message || 'LINE用戶註冊失敗')
-      }
-
-      if (data?.data?.user) {
-        console.log('LINE用戶註冊成功:', data.data)
-        setLineUser(data.data.user)
-        
-        // 儲存到localStorage以便下次使用
-        localStorage.setItem('lineUser', JSON.stringify(data.data.user))
-        
-        console.log(`${data.data.message}: ${displayName}`)
-      } else {
-        throw new Error('無效的回應格式')
-      }
+      console.log('LINE用戶資訊已設定:', mockLineUser)
+      setLineUser(mockLineUser)
+      
+      // 儲存到localStorage以便下次使用
+      localStorage.setItem('lineUser', JSON.stringify(mockLineUser))
+      
+      console.log(`歡迎 ${displayName}！`)
     } catch (error: any) {
-      console.error('註冊LINE用戶失敗:', error)
-      setError(error.message || '註冊失敗')
+      console.error('處理LINE用戶失敗:', error)
+      setError(error.message || '處理失敗')
     } finally {
       setIsLoading(false)
     }

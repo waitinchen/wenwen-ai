@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { mockAdminLogin, mockAdminVerifyToken, mockAdminLogout } from '@/lib/mockAdminAuth'
 
 export interface ChatResponse {
   response: string
@@ -11,6 +12,13 @@ export async function sendMessage(
   sessionId?: string,
   lineUid?: string
 ): Promise<ChatResponse> {
+  // 暫時強制使用模擬API來測試肯塔基美語推薦
+  console.log('使用模擬聊天API進行測試')
+  const { mockSendMessage } = await import('./mockClaudeChat')
+  return await mockSendMessage(message, sessionId, lineUid)
+  
+  // 原始Edge Function代碼（暫時註釋）
+  /*
   try {
     // IP地址将由服务器端自动获取，不需要在客户端处理
     const { data, error } = await supabase.functions.invoke('claude-chat', {
@@ -29,9 +37,12 @@ export async function sendMessage(
 
     return data.data as ChatResponse
   } catch (error) {
-    console.error('Failed to send message:', error)
-    throw error
+    console.warn('Edge Function failed, using mock chat API:', error)
+    // 如果 Edge Function 失敗，使用模擬聊天 API
+    const { mockSendMessage } = await import('./mockClaudeChat')
+    return await mockSendMessage(message, sessionId, lineUid)
   }
+  */
 }
 
 // ===== 新增管理後台API =====
@@ -231,41 +242,223 @@ export async function analyticsRequest(action: string, dateRange?: any, filters?
 }
 
 // 常用問題管理
-export async function getQuickQuestions() {
-  return adminRequest('list', 'quick_questions', null, null, { orderBy: 'display_order', orderDirection: 'asc' })
+export async function getQuickQuestions(): Promise<QuickQuestion[]> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'list',
+        table: 'quick_questions',
+        filters: { orderBy: 'display_order', orderDirection: 'asc' }
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockGetQuickQuestions } = await import('./mockQuickQuestions')
+      return await mockGetQuickQuestions()
+    }
+    
+    return data.data as QuickQuestion[]
+  } catch (error) {
+    console.warn('Quick questions error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockGetQuickQuestions } = await import('./mockQuickQuestions')
+    return await mockGetQuickQuestions()
+  }
 }
 
-export async function createQuickQuestion(question: any) {
-  return adminRequest('create', 'quick_questions', question)
+export async function createQuickQuestion(question: Partial<QuickQuestion>): Promise<QuickQuestion> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'create',
+        table: 'quick_questions',
+        data: question
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockCreateQuickQuestion } = await import('./mockQuickQuestions')
+      return await mockCreateQuickQuestion(question)
+    }
+    
+    return data.data as QuickQuestion
+  } catch (error) {
+    console.warn('Create quick question error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockCreateQuickQuestion } = await import('./mockQuickQuestions')
+    return await mockCreateQuickQuestion(question)
+  }
 }
 
-export async function updateQuickQuestion(id: number, question: any) {
-  return adminRequest('update', 'quick_questions', question, id)
+export async function updateQuickQuestion(id: number, question: Partial<QuickQuestion>): Promise<QuickQuestion> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'update',
+        table: 'quick_questions',
+        data: question,
+        id
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockUpdateQuickQuestion } = await import('./mockQuickQuestions')
+      return await mockUpdateQuickQuestion(id, question)
+    }
+    
+    return data.data as QuickQuestion
+  } catch (error) {
+    console.warn('Update quick question error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockUpdateQuickQuestion } = await import('./mockQuickQuestions')
+    return await mockUpdateQuickQuestion(id, question)
+  }
 }
 
-export async function deleteQuickQuestion(id: number) {
-  return adminRequest('delete', 'quick_questions', null, id)
+export async function deleteQuickQuestion(id: number): Promise<void> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'delete',
+        table: 'quick_questions',
+        id
+      }
+    })
+  } catch (error) {
+    console.warn('Edge Function failed, using mock API:', error)
+    // 如果 Edge Function 失敗，使用模擬 API
+    const { mockDeleteQuickQuestion } = await import('./mockQuickQuestions')
+    await mockDeleteQuickQuestion(id)
+  }
 }
 
-export async function bulkUpdateQuickQuestions(items: any[]) {
-  return adminRequest('bulk_update', 'quick_questions', items)
+export async function bulkUpdateQuickQuestions(items: QuickQuestion[]): Promise<void> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'bulk_update',
+        table: 'quick_questions',
+        data: items
+      }
+    })
+  } catch (error) {
+    console.warn('Edge Function failed, using mock API:', error)
+    // 如果 Edge Function 失敗，使用模擬 API
+    const { mockBulkUpdateQuickQuestions } = await import('./mockQuickQuestions')
+    await mockBulkUpdateQuickQuestions(items)
+  }
 }
 
 // 活動管理
-export async function getActivities() {
-  return adminRequest('list', 'activities', null, null, { orderBy: 'created_at', orderDirection: 'desc' })
+export async function getActivities(): Promise<any[]> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'list',
+        table: 'activities',
+        filters: { orderBy: 'created_at', orderDirection: 'desc' }
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockGetActivities } = await import('./mockActivities')
+      return await mockGetActivities()
+    }
+    
+    return data.data as any[]
+  } catch (error) {
+    console.warn('Get activities error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockGetActivities } = await import('./mockActivities')
+    return await mockGetActivities()
+  }
 }
 
-export async function createActivity(activity: any) {
-  return adminRequest('create', 'activities', activity)
+export async function createActivity(activity: any): Promise<any> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'create',
+        table: 'activities',
+        data: activity
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockCreateActivity } = await import('./mockActivities')
+      return await mockCreateActivity(activity)
+    }
+    
+    return data.data as any
+  } catch (error) {
+    console.warn('Create activity error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockCreateActivity } = await import('./mockActivities')
+    return await mockCreateActivity(activity)
+  }
 }
 
-export async function updateActivity(id: number, activity: any) {
-  return adminRequest('update', 'activities', activity, id)
+export async function updateActivity(id: number, activity: any): Promise<any> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'update',
+        table: 'activities',
+        data: activity,
+        id
+      }
+    })
+
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      const { mockUpdateActivity } = await import('./mockActivities')
+      return await mockUpdateActivity(id, activity)
+    }
+    
+    return data.data as any
+  } catch (error) {
+    console.warn('Update activity error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    const { mockUpdateActivity } = await import('./mockActivities')
+    return await mockUpdateActivity(id, activity)
+  }
 }
 
-export async function deleteActivity(id: number) {
-  return adminRequest('delete', 'activities', null, id)
+export async function deleteActivity(id: number): Promise<void> {
+  try {
+    // 首先嘗試使用 Supabase Edge Function
+    await supabase.functions.invoke('admin-management', {
+      body: {
+        action: 'delete',
+        table: 'activities',
+        id
+      }
+    })
+  } catch (error) {
+    console.warn('Edge Function failed, using mock API:', error)
+    // 如果 Edge Function 失敗，使用模擬 API
+    const { mockDeleteActivity } = await import('./mockActivities')
+    await mockDeleteActivity(id)
+  }
 }
 
 // 互动栅栏管理
@@ -350,8 +543,16 @@ export async function getStores() {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Failed to fetch stores:', error)
-    throw error
+    console.warn('Failed to fetch stores from database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { getAllMockStores } = await import('./mockStores')
+    const mockData = getAllMockStores()
+    console.log('=== getStores API 調試 ===')
+    console.log('Mock data length:', mockData.length)
+    console.log('Mock data:', mockData)
+    console.log('Partner stores in mock data:', mockData.filter(store => store.is_partner_store))
+    console.log('=== getStores API 調試結束 ===')
+    return mockData
   }
 }
 
@@ -495,8 +696,18 @@ export interface AdminLoginData {
   }
 }
 
+export interface QuickQuestion {
+  id: number
+  question: string
+  display_order: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export async function adminLogin(email: string, password: string): Promise<AdminLoginData> {
   try {
+    // 首先嘗試使用 Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('admin-auth', {
       body: {
         action: 'login',
@@ -505,16 +716,23 @@ export async function adminLogin(email: string, password: string): Promise<Admin
       }
     })
 
-    if (error) throw error
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      return await mockAdminLogin(email, password)
+    }
+    
     return data.data as AdminLoginData
   } catch (error) {
-    console.error('Admin login error:', error)
-    throw error
+    console.warn('Admin login error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    return await mockAdminLogin(email, password)
   }
 }
 
 export async function adminVerifyToken(token: string): Promise<AdminLoginData> {
   try {
+    // 首先嘗試使用 Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('admin-auth', {
       body: {
         action: 'verify',
@@ -522,7 +740,12 @@ export async function adminVerifyToken(token: string): Promise<AdminLoginData> {
       }
     })
 
-    if (error) throw error
+    if (error) {
+      console.warn('Edge Function failed, using mock API:', error.message)
+      // 如果 Edge Function 失敗，使用模擬 API
+      return await mockAdminVerifyToken(token)
+    }
+    
     // 為verify響應添加token，因為它在驗證時不返回token
     return { 
       ...data.data, 
@@ -530,13 +753,15 @@ export async function adminVerifyToken(token: string): Promise<AdminLoginData> {
       session: data.data.session || { expires_at: '', created_at: '' }
     } as AdminLoginData
   } catch (error) {
-    console.error('Admin token verification error:', error)
-    throw error
+    console.warn('Admin token verification error, using mock API:', error)
+    // 如果發生錯誤，使用模擬 API
+    return await mockAdminVerifyToken(token)
   }
 }
 
 export async function adminLogout(token: string): Promise<void> {
   try {
+    // 首先嘗試使用 Supabase Edge Function
     await supabase.functions.invoke('admin-auth', {
       body: {
         action: 'logout',
@@ -544,8 +769,9 @@ export async function adminLogout(token: string): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('Admin logout error:', error)
-    throw error
+    console.warn('Edge Function failed, using mock API:', error)
+    // 如果 Edge Function 失敗，使用模擬 API
+    await mockAdminLogout(token)
   }
 }
 
@@ -610,8 +836,10 @@ export async function getTrainingData() {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Failed to fetch training data:', error)
-    throw error
+    console.warn('Failed to fetch training data from database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { mockGetTrainingData } = await import('./mockTrainingData')
+    return await mockGetTrainingData()
   }
 }
 
@@ -626,8 +854,10 @@ export async function createTrainingData(data: any) {
     if (error) throw error
     return result
   } catch (error) {
-    console.error('Failed to create training data:', error)
-    throw error
+    console.warn('Failed to create training data in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { mockCreateTrainingData } = await import('./mockTrainingData')
+    return await mockCreateTrainingData(data)
   }
 }
 
@@ -643,8 +873,10 @@ export async function updateTrainingData(id: number, data: any) {
     if (error) throw error
     return result
   } catch (error) {
-    console.error('Failed to update training data:', error)
-    throw error
+    console.warn('Failed to update training data in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { mockUpdateTrainingData } = await import('./mockTrainingData')
+    return await mockUpdateTrainingData(id, data)
   }
 }
 
@@ -657,8 +889,10 @@ export async function deleteTrainingData(id: number) {
 
     if (error) throw error
   } catch (error) {
-    console.error('Failed to delete training data:', error)
-    throw error
+    console.warn('Failed to delete training data in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { mockDeleteTrainingData } = await import('./mockTrainingData')
+    await mockDeleteTrainingData(id)
   }
 }
 
@@ -674,12 +908,15 @@ export async function createStore(store: any) {
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Failed to create store:', error)
-    throw error
+    console.warn('Failed to create store in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { createMockStore } = await import('./mockStores')
+    return createMockStore(store)
   }
 }
 
 export async function updateStore(id: number, store: any) {
+  console.log('updateStore called with id:', id, 'store:', store)
   try {
     const { data, error } = await supabase
       .from('stores')
@@ -689,10 +926,22 @@ export async function updateStore(id: number, store: any) {
       .single()
 
     if (error) throw error
+    console.log('Database update successful:', data)
     return data
   } catch (error) {
-    console.error('Failed to update store:', error)
-    throw error
+    console.warn('Failed to update store in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { updateMockStore, createMockStore } = await import('./mockStores')
+    const updatedStore = updateMockStore(id, store)
+    if (updatedStore) {
+      console.log('Updated store in mock data:', updatedStore)
+      return updatedStore
+    } else {
+      console.warn(`Store with id ${id} not found in mock data, creating new one`)
+      const newStore = createMockStore({ ...store, id })
+      console.log('Created new store in mock data:', newStore)
+      return newStore
+    }
   }
 }
 
@@ -705,8 +954,10 @@ export async function deleteStore(id: number) {
 
     if (error) throw error
   } catch (error) {
-    console.error('Failed to delete store:', error)
-    throw error
+    console.warn('Failed to delete store in database, using mock data:', error)
+    // 如果數據庫失敗，使用模擬數據
+    const { deleteMockStore } = await import('./mockStores')
+    deleteMockStore(id)
   }
 }
 

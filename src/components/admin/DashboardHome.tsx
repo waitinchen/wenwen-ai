@@ -23,12 +23,15 @@ import {
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { getDashboardStats, getStores } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { VersionManager } from '@/config/version'
 
 const DashboardHome = () => {
   const { admin } = useAdminAuth()
   const [stats, setStats] = useState<any>({})
   const [stores, setStores] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [versionInfo, setVersionInfo] = useState<any>(null)
+  const [todayUpdates, setTodayUpdates] = useState<any[]>([])
 
   useEffect(() => {
     loadDashboardData()
@@ -49,6 +52,12 @@ const DashboardHome = () => {
       
       setStats(dashboardStats || {})
       setStores(storesData || [])
+      
+      // 載入版本信息
+      const currentVersion = VersionManager.getCurrentVersion()
+      const todayUpdates = VersionManager.getTodayUpdates()
+      setVersionInfo(currentVersion)
+      setTodayUpdates(todayUpdates)
     } catch (error) {
       console.error('載入儀表板資料失敗:', error)
     } finally {
@@ -254,6 +263,15 @@ const DashboardHome = () => {
                 <Clock className="w-5 h-5 mr-2" />
                 <span className="text-sm font-medium">上次登入： 2 小時前</span>
               </div>
+              {versionInfo && (
+                <div className="flex items-center">
+                  <Settings className="w-5 h-5 mr-2" />
+                  <span className="text-sm font-medium">版本：</span>
+                  <span className="ml-2 px-2 py-1 bg-white/20 text-white text-xs font-bold rounded-full">
+                    {versionInfo.version}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div className="text-right">
@@ -395,6 +413,37 @@ const DashboardHome = () => {
               </div>
             </div>
           </div>
+
+          {/* 今日更新 */}
+          {todayUpdates.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">今日更新</h3>
+                <Link to="/admin/version" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  查看全部 →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {todayUpdates.slice(0, 3).map((update, index) => (
+                  <div key={update.id} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900">{update.title}</p>
+                      <p className="text-xs text-slate-500">{update.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          {update.type}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                          {update.impact}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 最近活動 */}
           <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">

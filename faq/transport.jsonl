@@ -1,0 +1,7 @@
+{"intent":"transport_query","q":"文山特區怎麼去？","a":"文山特區交通超方便的！你可以搭高雄捷運到鳳山西站，或搭火車到鳳山火車站，走路5-10分鐘就到了～","source":"transport guide"}
+{"intent":"transport_query","q":"鳳山火車站到文山特區多遠？","a":"鳳山火車站到文山特區走路大概5-10分鐘，很近的！出站後往文衡路方向走就到了～","source":"transport guide"}
+{"intent":"transport_query","q":"有公車到文山特區嗎？","a":"有的！可以搭高雄市公車到鳳山火車站或鳳山西站，再走路到文山特區，很方便的！","source":"transport guide"}
+{"intent":"transport_query","q":"文山特區附近有捷運站嗎？","a":"有的！高雄捷運鳳山西站就在附近，走路大概5分鐘就到了，超方便的！","source":"transport guide"}
+{"intent":"transport_query","q":"開車到文山特區怎麼走？","a":"開車的話，可以走國道1號下鳳山交流道，往鳳山方向，到文衡路就到了！附近有很多停車場～","source":"transport guide"}
+{"intent":"parking_query","q":"鳳山附近哪裡好停車？","a":"鳳山有38個登錄停車場，我會先推薦距離你近的，再看你要不要便宜或24小時。","source":"parking dataset"}
+{"intent":"parking_query","q":"有沒有24小時的停車場？","a":"目前收錄的資料標記尚未完整，但我會優先推薦營業時間最長、最接近24小時的選項。","source":"parking dataset"}

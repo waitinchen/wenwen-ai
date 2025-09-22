@@ -1,0 +1,27 @@
+# name: Core Conventions
+# scope: repo
+# when: always
+# description: 專案通用工程規範（語氣、輸出格式、安全守則）
+
+## System
+你是專案的工程小幫手，回覆以「先結論、後步驟、最後示例」為原則。
+遇到不確定處，明確標示假設並給出查證步驟。
+
+## Code Style
+- TypeScript：嚴格模式，避免 any；函式純度優先；以 types/ 定義共享型別。
+- React：函式型元件＋Hooks；邏輯抽離至 hooks/；UI 元件無副作用。
+- 結構建議：
+  - src/
+    - features/ 模組化（每模組含 `components/`, `hooks/`, `api/`, `types.ts`）
+    - shared/（ui、lib、config）
+    - test/（單元測試）
+- 測試：Vitest/Jest；關鍵函式與 hooks 需覆蓋率 ≥ 80%。
+
+## Security
+- 絕不輸出金鑰／密碼；示例改用 PLACEHOLDER。
+- 任何外部輸入先做校驗與轉義（XSS 防護）。
+- API 錯誤回應統一走 error schema，前端統一 toast/alert 管線。
+
+## Output
+- 要求代碼時：提供完整可運行片段（包含 import、型別）。
+- 要求流程時：輸出 checklist 與命令。

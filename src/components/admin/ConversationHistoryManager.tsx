@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Search, MessageCircle, Users, Clock, ArrowRight, Filter, Calendar } from 'lucide-react'
+import { Search, MessageCircle, Users, Clock, ArrowRight, Filter, Calendar, Plus, Trash2, Database, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { testDataGenerator } from '@/utils/testDataGenerator'
 
 interface ConversationSession {
   id: number
@@ -36,6 +37,8 @@ const ConversationHistoryManager: React.FC = () => {
     totalMessages: 0,
     todaySessions: 0
   })
+  const [isGeneratingData, setIsGeneratingData] = useState(false)
+  const [isClearingData, setIsClearingData] = useState(false)
 
   useEffect(() => {
     loadConversations()
@@ -85,8 +88,8 @@ const ConversationHistoryManager: React.FC = () => {
             // 獲取該會話的最新用戶消息作為預覽
             const { data: latestMessage } = await supabase
               .from('chat_messages')
-              .select('content')
-              .eq('session_id', session.session_id)
+              .select('message_text')
+              .eq('session_id', session.id) // 使用 chat_sessions 的 id
               .eq('message_type', 'user')
               .order('created_at', { ascending: false })
               .limit(1)
@@ -100,12 +103,19 @@ const ConversationHistoryManager: React.FC = () => {
               userDisplayName = lineUser.line_display_name;
               userAvatar = lineUser.line_avatar_url || '';
             } else {
-              userDisplayName = session.user_ip ? `用戶 (${session.user_ip})` : '遊客';
+              // 顯示更友好的用戶名稱
+              if (session.user_ip && session.user_ip !== 'unknown-client') {
+                userDisplayName = `用戶 (${session.user_ip})`;
+              } else if (session.user_ip === 'unknown-client') {
+                userDisplayName = '遊客用戶';
+              } else {
+                userDisplayName = '未知用戶';
+              }
             }
 
             return {
               ...session,
-              latest_message: latestMessage?.content || '無消息記錄',
+              latest_message: latestMessage?.message_text || '無消息記錄',
               user_display_name: userDisplayName,
               user_avatar: userAvatar,
               line_users: lineUser,
@@ -142,10 +152,29 @@ const ConversationHistoryManager: React.FC = () => {
       // 統計數據
       const totalSessions = sessionsWithDetails.length
       const totalMessages = sessionsWithDetails.reduce((sum, s) => sum + s.message_count, 0)
-      const today = new Date().toISOString().split('T')[0]
-      const todaySessions = sessionsWithDetails.filter(
-        s => s.started_at.startsWith(today)
-      ).length
+      
+      // 計算今日會話 - 使用正確的 UTC 時間比較
+      const now = new Date()
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
+      
+      // 轉換為 UTC 時間字符串進行比較
+      const todayStartUTC = todayStart.toISOString()
+      const todayEndUTC = todayEnd.toISOString()
+      
+      const todaySessions = sessionsWithDetails.filter(session => {
+        const sessionDate = session.started_at
+        return sessionDate >= todayStartUTC && sessionDate < todayEndUTC
+      }).length
+
+      // 調試信息
+      console.log('今日會話計算:', {
+        todayStartUTC,
+        todayEndUTC,
+        totalSessions: sessionsWithDetails.length,
+        todaySessions,
+        sampleSession: sessionsWithDetails[0]?.started_at
+      })
 
       setTotalStats({ totalSessions, totalMessages, todaySessions })
     } catch (error) {
@@ -224,6 +253,101 @@ const ConversationHistoryManager: React.FC = () => {
     return formatDateTime(timestamp)
   }
 
+  const handleGenerateTestData = async () => {
+    setIsGeneratingData(true)
+    try {
+      // 直接在前端生成測試數據，不依賴數據庫
+      const testSessions = generateMockSessions(15)
+      setSessions(testSessions)
+      
+      // 更新統計數據
+      setTotalStats({
+        totalSessions: testSessions.length,
+        totalMessages: testSessions.reduce((sum, session) => sum + (session.message_count || 0), 0),
+        todaySessions: testSessions.filter(session => {
+          const today = new Date().toDateString()
+          return new Date(session.started_at).toDateString() === today
+        }).length
+      })
+      
+      alert('✅ 測試數據生成成功！')
+    } catch (error) {
+      console.error('生成測試數據失敗:', error)
+      alert('❌ 生成測試數據失敗，請檢查控制台')
+    } finally {
+      setIsGeneratingData(false)
+    }
+  }
+
+  const generateMockSessions = (count: number) => {
+    const sessions = []
+    const sampleMessages = [
+      '文山特區有什麼好吃的餐廳？',
+      '停車資訊',
+      '最近的活動有哪些？',
+      '商場營業時間',
+      '有推薦的咖啡廳嗎？',
+      '交通怎麼去？',
+      '附近有什麼景點？',
+      '有優惠活動嗎？',
+      '客服電話是多少？',
+      '如何成為會員？'
+    ]
+
+    for (let i = 0; i < count; i++) {
+      const sessionId = `test_session_${Date.now()}_${i}`
+      const userIp = i % 3 === 0 ? 'unknown-client' : `192.168.1.${100 + i}`
+      const hasLineUser = i % 4 === 0
+      const messageCount = Math.floor(Math.random() * 5) + 1
+      const latestMessage = sampleMessages[Math.floor(Math.random() * sampleMessages.length)]
+      
+      sessions.push({
+        id: i + 1,
+        session_id: sessionId,
+        user_ip: userIp,
+        user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        line_user_id: hasLineUser ? i + 1 : null,
+        started_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        last_activity: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+        message_count: messageCount,
+        latest_message: latestMessage,
+        user_display_name: hasLineUser ? `測試用戶${i + 1}` : (userIp === 'unknown-client' ? '遊客用戶' : `用戶 (${userIp})`),
+        user_avatar: hasLineUser ? `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}` : '',
+        line_users: hasLineUser ? {
+          id: i + 1,
+          line_uid: `test_user_${i + 1}`,
+          line_display_name: `測試用戶${i + 1}`,
+          line_avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}`
+        } : null
+      })
+    }
+    
+    return sessions
+  }
+
+  const handleClearTestData = async () => {
+    if (!confirm('確定要清除所有測試數據嗎？此操作無法復原！')) {
+      return
+    }
+    
+    setIsClearingData(true)
+    try {
+      // 清除前端測試數據
+      setSessions([])
+      setTotalStats({
+        totalSessions: 0,
+        totalMessages: 0,
+        todaySessions: 0
+      })
+      alert('✅ 測試數據清除成功！')
+    } catch (error) {
+      console.error('清除測試數據失敗:', error)
+      alert('❌ 清除測試數據失敗，請檢查控制台')
+    } finally {
+      setIsClearingData(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -243,6 +367,39 @@ const ConversationHistoryManager: React.FC = () => {
           <div className="flex items-center gap-3">
             <MessageCircle className="h-6 w-6 text-blue-500" />
             <h1 className="text-2xl font-semibold text-gray-900">對話歷史管理</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleGenerateTestData}
+              disabled={isGeneratingData}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-green-300 rounded-md shadow-sm text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingData ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {isGeneratingData ? '生成中...' : '生成測試數據'}
+            </button>
+            <button
+              onClick={handleClearTestData}
+              disabled={isClearingData}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isClearingData ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isClearingData ? '清除中...' : '清除測試數據'}
+            </button>
+            <button
+              onClick={loadConversations}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <RefreshCw className="h-4 w-4" />
+              重新載入
+            </button>
           </div>
         </div>
         
@@ -377,7 +534,8 @@ const ConversationHistoryManager: React.FC = () => {
                           {session.user_display_name}
                         </h3>
                         <p className="text-xs text-gray-500">
-                          {session.user_avatar ? 'LINE用戶' : `IP: ${session.user_ip}`}
+                          {session.user_avatar ? 'LINE用戶' : 
+                           session.user_ip && session.user_ip !== 'unknown-client' ? `IP: ${session.user_ip}` : '遊客用戶'}
                         </p>
                       </div>
                     </div>

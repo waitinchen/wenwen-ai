@@ -5,17 +5,11 @@ import {
   createQuickQuestion,
   updateQuickQuestion,
   deleteQuickQuestion,
-  bulkUpdateQuickQuestions
+  bulkUpdateQuickQuestions,
+  QuickQuestion
 } from '@/lib/api'
 
-interface QuickQuestion {
-  id: number
-  question: string
-  display_order: number
-  is_enabled: boolean
-  created_at: string
-  updated_at: string
-}
+// QuickQuestion interface is now imported from @/lib/api
 
 const QuickQuestionsPage = () => {
   const [questions, setQuestions] = useState<QuickQuestion[]>([])

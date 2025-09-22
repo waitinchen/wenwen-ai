@@ -125,6 +125,7 @@ CREATE TABLE stores (
     features TEXT,
     is_safe_store BOOLEAN DEFAULT false,
     has_member_discount BOOLEAN DEFAULT false,
+    is_partner_store BOOLEAN DEFAULT false,
     facebook_url TEXT,
     website_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

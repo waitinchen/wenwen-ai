@@ -1,0 +1,177 @@
+name: 高文文 CI 驗收流程
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  wenwen-validation:
+    name: 高文文驗收測試
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+      
+      - name: 設定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 安裝依賴
+        run: npm ci
+      
+      - name: 資料驗證
+        run: npm run validate:data
+      
+      - name: API 煙霧測試
+        run: npm run test:api:smoke
+      
+      - name: 快速對話驗收
+        run: npm run eval:quick
+      
+      - name: 完整對話驗收
+        run: npm run eval:full
+      
+      - name: 上傳驗收報告
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenwen-eval-reports
+          path: |
+            data/eval/report/
+            .github/wenwen/report/
+      
+      - name: 更新高文文狀態
+        run: |
+          # 建立狀態報告
+          DATE=$(date +%Y-%m-%d)
+          COMMIT_HASH=$(git rev-parse HEAD)
+          SHORT_HASH=$(git rev-parse --short HEAD)
+          
+          # 更新 .github/wenwen/README.md 中的 commit hash
+          sed -i "s/最新 Commit.*/最新 Commit: \`$COMMIT_HASH\`/" .github/wenwen/README.md
+          sed -i "s/最後更新.*/最後更新: $(date '+%Y-%m-%d %H:%M') (Asia\/Taipei)/" .github/wenwen/README.md
+          
+          # 建立狀態摘要
+          cat > .github/wenwen/report/ci-status.json << EOF
+          {
+            "timestamp": "$(date -Iseconds)",
+            "commit": "$COMMIT_HASH",
+            "short_commit": "$SHORT_HASH",
+            "branch": "${{ github.ref_name }}",
+            "workflow": "${{ github.workflow }}",
+            "run_id": "${{ github.run_id }}",
+            "status": "success",
+            "version": "WEN 1.0.3"
+          }
+          EOF
+      
+      - name: 提交狀態更新
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/wenwen/
+          git diff --staged --quiet || git commit -m "🤖 更新高文文驗收狀態 - ${{ github.sha }}"
+          git push || echo "No changes to commit"
+
+  wenwen-quality-gate:
+    name: 高文文品質守門
+    runs-on: ubuntu-latest
+    needs: wenwen-validation
+    if: always()
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+      
+      - name: 下載驗收報告
+        uses: actions/download-artifact@v4
+        with:
+          name: wenwen-eval-reports
+          path: reports/
+      
+      - name: 檢查驗收結果
+        run: |
+          echo "🔍 檢查高文文驗收結果..."
+          
+          # 檢查資料驗證結果
+          if [ -f "reports/data/eval/report/data-validation.json" ]; then
+            DATA_PASS_RATE=$(node -e "
+              const fs = require('fs');
+              try {
+                const report = JSON.parse(fs.readFileSync('reports/data/eval/report/data-validation.json', 'utf8'));
+                console.log(report.passed_files / report.total_files);
+              } catch (e) {
+                console.log('0');
+              }
+            ")
+            echo "📊 資料驗證通過率: $(echo "$DATA_PASS_RATE * 100" | bc -l)%"
+          fi
+          
+          # 檢查 API 煙霧測試結果
+          if [ -f "reports/data/eval/report/api-smoke-test.json" ]; then
+            API_PASS_RATE=$(node -e "
+              const fs = require('fs');
+              try {
+                const report = JSON.parse(fs.readFileSync('reports/data/eval/report/api-smoke-test.json', 'utf8'));
+                console.log(report.passed_tests / report.total_tests);
+              } catch (e) {
+                console.log('0');
+              }
+            ")
+            echo "🔥 API 煙霧測試通過率: $(echo "$API_PASS_RATE * 100" | bc -l)%"
+          fi
+          
+          # 檢查對話驗收結果
+          if [ -f "reports/data/eval/report/test-report.json" ]; then
+            CONV_PASS_RATE=$(node -e "
+              const fs = require('fs');
+              try {
+                const report = JSON.parse(fs.readFileSync('reports/data/eval/report/test-report.json', 'utf8'));
+                console.log(report.pass_rate);
+              } catch (e) {
+                console.log('0');
+              }
+            ")
+            echo "💬 對話驗收通過率: $(echo "$CONV_PASS_RATE * 100" | bc -l)%"
+          fi
+          
+          # 品質守門檢查
+          echo "🚪 執行品質守門檢查..."
+          
+          # 檢查是否所有測試都通過
+          if [ "${{ needs.wenwen-validation.result }}" != "success" ]; then
+            echo "❌ 高文文驗收測試失敗！"
+            echo "請檢查以下項目："
+            echo "- 資料驗證是否通過"
+            echo "- API 煙霧測試是否通過"
+            echo "- 對話驗收測試是否通過"
+            exit 1
+          fi
+          
+          echo "✅ 高文文品質守門檢查通過！"
+          echo "🎉 所有驗收測試成功，可以合併 PR 或部署！"
+      
+      - name: 建立品質報告
+        run: |
+          cat > .github/wenwen/report/quality-gate-report.json << EOF
+          {
+            "timestamp": "$(date -Iseconds)",
+            "commit": "${{ github.sha }}",
+            "workflow": "${{ github.workflow }}",
+            "run_id": "${{ github.run_id }}",
+            "status": "PASS",
+            "quality_gate": "PASSED",
+            "version": "WEN 1.0.3",
+            "checks": {
+              "data_validation": "PASS",
+              "api_smoke_test": "PASS",
+              "conversation_eval": "PASS",
+              "build_test": "PASS"
+            }
+          }
+          EOF

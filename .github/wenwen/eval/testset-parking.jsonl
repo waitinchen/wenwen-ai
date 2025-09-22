@@ -1,0 +1,6 @@
+{"q":"我要找停車場","expected_intent":"parking_query","must_include":["停車場","導航"],"deny":["重複自介"]}
+{"q":"鳳山附近哪裡好停車？","expected_intent":"parking_query","must_include":["停車場","鳳山"],"deny":["重複自介"]}
+{"q":"有沒有24小時的停車場？","expected_intent":"parking_query","must_include":["停車場","24小時"],"deny":["重複自介"]}
+{"q":"推薦便宜的停車場","expected_intent":"parking_query","must_include":["停車場","便宜"],"deny":["重複自介"]}
+{"q":"停車費率多少？","expected_intent":"parking_query","must_include":["停車場","費率"],"deny":["重複自介"]}
+{"q":"哪裡可以停車？","expected_intent":"parking_query","must_include":["停車場","推薦"],"deny":["重複自介"]}

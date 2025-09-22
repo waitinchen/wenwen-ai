@@ -1,0 +1,294 @@
+Deno.serve(async (req) => {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE, PATCH',
+        'Access-Control-Max-Age': '86400',
+        'Access-Control-Allow-Credentials': 'false'
+    };
+
+    if (req.method === 'OPTIONS') {
+        return new Response(null, { status: 200, headers: corsHeaders });
+    }
+
+    try {
+        const { message, sessionId, line_uid } = await req.json();
+        
+        if (!message) {
+            throw new Error('Message is required');
+        }
+
+        console.log('=== 收到聊天请求 ===');
+        console.log('Message:', message.substring(0, 50));
+        console.log('SessionId:', sessionId);
+        console.log('LineUid:', line_uid);
+
+        const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
+
+        if (!claudeApiKey) {
+            throw new Error('Claude API key not configured');
+        }
+
+        // 獲取真實用戶IP
+        const userIP = req.headers.get('x-forwarded-for') || 
+                      req.headers.get('x-real-ip') || 
+                      req.headers.get('cf-connecting-ip') || 
+                      'unknown-client';
+
+        console.log('User IP:', userIP);
+
+        // 生成或使用現有的session ID
+        let currentSessionId = sessionId;
+        if (!currentSessionId) {
+            currentSessionId = crypto.randomUUID();
+        }
+
+        console.log('Current Session ID:', currentSessionId);
+
+        // 系統提示詞（移除商家資料獲取，避免JSON解析錯誤）
+        const systemPrompt = `你是高文文，23歲的高雄女孩，文山特區商圈的專屬客服助理。你活潑、親切、專業，熟悉當地的美食、商店、交通和活動資訊。
+
+重要資訊：
+- 你服務的區域是：高雄市鳳山區文山特區商圈
+- 主要商圈範圍：文山特區、文衡路、文濱路、文龍路一帶
+- 交通：鄰近鳳山火車站、高雄捷運鳳山西站
+- 特色：住宅區與商業區混合，有許多在地美食和商店
+
+請友善地協助用戶解答關於文山特區商圈的問題，提供準確的在地資訊。`;
+
+        // 調用Claude API
+        console.log('=== 調用Claude API ===');
+        const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': claudeApiKey,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-3-haiku-20240307',
+                max_tokens: 1000,
+                temperature: 0.7,
+                system: systemPrompt,
+                messages: [
+                    {
+                        role: 'user',
+                        content: message
+                    }
+                ]
+            })
+        });
+
+        if (!claudeResponse.ok) {
+            const error = await claudeResponse.text();
+            console.error('Claude API error:', error);
+            throw new Error('AI服務暫時無法使用，請稍後再試');
+        }
+
+        const claudeData = await claudeResponse.json();
+        const aiResponse = claudeData.content[0].text;
+
+        console.log('=== Claude回應成功 ===');
+        console.log('AI Response:', aiResponse.substring(0, 100));
+
+        // 記錄對話到數據庫
+        console.log('=== 開始記錄到數據庫 ===');
+        const supabaseUrl = 'https://vqcuwjfxoxjgsrueqodj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxY3V3amZ4b3hqZ3NydWVxb2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5MDc0ODUsImV4cCI6MjA3MzQ4MzQ4NX0.PR5LV3ENSwpxYgml6L7PpyerZHAbfQzdC0ny0JVhcBo';
+        
+        try {
+            // 檢查或創建session
+            console.log('檢查會話:', currentSessionId);
+            const sessionResponse = await fetch(`${supabaseUrl}/rest/v1/chat_sessions?session_id=eq.${currentSessionId}`, {
+                headers: {
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'apikey': supabaseKey
+                }
+            });
+            
+            const existingSessions = await sessionResponse.json();
+            console.log('現有會話數量:', existingSessions.length);
+            
+            let sessionId = null;
+            
+            if (existingSessions.length === 0) {
+                // 創建新session
+                console.log('創建新會話');
+                const sessionData = {
+                    session_id: currentSessionId,
+                    user_ip: userIP,
+                    message_count: 0,
+                    user_agent: req.headers.get('user-agent') || null,
+                    started_at: new Date().toISOString(),
+                    last_activity: new Date().toISOString(),
+                    line_user_id: line_uid ? 1 : null
+                };
+
+                console.log('會話數據:', sessionData);
+                
+                const createSessionResponse = await fetch(`${supabaseUrl}/rest/v1/chat_sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                if (!createSessionResponse.ok) {
+                    const errorText = await createSessionResponse.text();
+                    console.error('創建會話失敗:', errorText);
+                    throw new Error('創建會話失敗: ' + errorText);
+                } else {
+                    console.log('會話創建成功');
+                    
+                    // 重新查詢獲取ID
+                    const newSessionResponse = await fetch(`${supabaseUrl}/rest/v1/chat_sessions?session_id=eq.${currentSessionId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${supabaseKey}`,
+                            'apikey': supabaseKey
+                        }
+                    });
+                    const newSessions = await newSessionResponse.json();
+                    if (newSessions.length > 0) {
+                        sessionId = newSessions[0].id;
+                        console.log('獲取新會話ID:', sessionId);
+                    }
+                }
+            } else {
+                console.log('會話已存在');
+                sessionId = existingSessions[0].id;
+                console.log('現有會話ID:', sessionId);
+            }
+
+            if (sessionId) {
+                console.log('=== 開始記錄消息 ===');
+                console.log('會話ID:', sessionId);
+                
+                // 記錄用戶消息
+                console.log('記錄用戶消息');
+                const userMessageData = {
+                    session_id: sessionId,
+                    message_type: 'user',
+                    content: message,
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('用戶消息數據:', userMessageData);
+                
+                const userMessageResponse = await fetch(`${supabaseUrl}/rest/v1/chat_messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userMessageData)
+                });
+
+                if (!userMessageResponse.ok) {
+                    const errorText = await userMessageResponse.text();
+                    console.error('記錄用戶消息失敗:', errorText);
+                    throw new Error('記錄用戶消息失敗: ' + errorText);
+                } else {
+                    console.log('✅ 用戶消息記錄成功');
+                }
+
+                // 記錄AI回應
+                console.log('記錄AI消息');
+                const botMessageData = {
+                    session_id: sessionId,
+                    message_type: 'bot',
+                    content: aiResponse,
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('AI消息數據:', botMessageData);
+                
+                const botMessageResponse = await fetch(`${supabaseUrl}/rest/v1/chat_messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(botMessageData)
+                });
+
+                if (!botMessageResponse.ok) {
+                    const errorText = await botMessageResponse.text();
+                    console.error('記錄AI消息失敗:', errorText);
+                    throw new Error('記錄AI消息失敗: ' + errorText);
+                } else {
+                    console.log('✅ AI消息記錄成功');
+                }
+
+                // 更新session活動時間和消息計數
+                console.log('更新會話統計');
+                const currentMessageCount = existingSessions.length > 0 ? (existingSessions[0].message_count || 0) : 0;
+                const updateData = {
+                    last_activity: new Date().toISOString(),
+                    message_count: currentMessageCount + 2
+                };
+                
+                console.log('更新數據:', updateData);
+                
+                const updateResponse = await fetch(`${supabaseUrl}/rest/v1/chat_sessions?id=eq.${sessionId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!updateResponse.ok) {
+                    const errorText = await updateResponse.text();
+                    console.error('更新會話失敗:', errorText);
+                } else {
+                    console.log('✅ 會話更新成功');
+                }
+
+                console.log('=== 所有記錄完成 ===');
+            } else {
+                console.error('❌ 無法獲取會話ID，跳過消息記錄');
+                throw new Error('無法獲取會話ID');
+            }
+
+        } catch (dbError) {
+            console.error('❌ 記錄對話到數據庫失敗:', dbError);
+            // 不阻擋回應，繼續返回結果
+        }
+
+        const response = {
+            response: aiResponse,
+            sessionId: currentSessionId,
+            timestamp: new Date().toISOString()
+        };
+
+        console.log('=== 返回回應 ===');
+        return new Response(JSON.stringify({ data: response }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+
+    } catch (error) {
+        console.error('❌ Claude chat error:', error);
+
+        const errorResponse = {
+            error: {
+                code: 'CLAUDE_CHAT_ERROR',
+                message: error.message || '聊天服務暫時無法使用'
+            }
+        };
+
+        return new Response(JSON.stringify(errorResponse), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+});
+
+
+

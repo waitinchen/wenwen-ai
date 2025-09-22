@@ -1,0 +1,11 @@
+{
+  "name": "parking-data-parser",
+  "version": "1.0.0",
+  "description": "高雄市鳳山區停車場資料解析工具",
+  "scripts": {
+    "parse-parking": "node scripts/parse-parking-excel.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

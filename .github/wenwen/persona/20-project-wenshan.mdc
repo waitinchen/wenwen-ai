@@ -1,0 +1,57 @@
+# name: Wenshan Smart-District Rules
+# scope: repo
+# when: always
+# patterns:
+#   - "src/**"
+#   - "apps/**"
+#   - "packages/**"
+# description: 文山特區智慧管理系統的技術規範與產出標準
+
+## Project Overview
+- 技術棧：TypeScript + React/Next.js（前端）、Node/Express/Nest（後端）、PostgreSQL、Redis、消息列隊（如 RabbitMQ / Kafka 視規模）。
+- 架構：前後端分離；API 以 REST 為主、關鍵流用 WebSocket；Infra 容器化（Docker + Compose/一鍵部署腳本）。
+
+## Code Style & Naming
+- 命名：`feature-verb-object`；資料表/欄位 snake_case，TS 型別 PascalCase。
+- 檔案：每 feature 一個目錄；共用元件置於 `src/shared/ui`。
+- ESLint + Prettier 強制；提交前必跑 lint & test。
+
+## File Structure (建議)
+- `src/`
+  - `features/<domain>/`（`components/`, `hooks/`, `api/`, `types.ts`）
+  - `shared/`（`ui/`, `lib/`, `config/`, `constants/`）
+  - `pages/` 或 `app/`（Next）
+- `scripts/` 部署與資料遷移腳本
+- `docs/` 架構說明與 API 契約
+
+## Component Template
+- 每個元件：`index.tsx` + `index.test.tsx` + `README.md` 簡述用途與 Props。
+- 大型表單使用 `react-hook-form` + schema（zod/yup）做驗證。
+
+## API & Data
+- API 統一錯誤格式：
+  ```json
+  { "ok": false, "code": "ERR_CODE", "message": "human message", "hint": "how to fix" }
+  ```
+- 資料庫：PostgreSQL + Redis（快取/會話）；重要操作加 transaction。
+- 外部 API：統一用 `fetch` + 錯誤重試；敏感資料加密存儲。
+
+## Testing & Quality
+- 單元測試：Vitest/Jest；覆蓋率 ≥ 80%。
+- E2E：Playwright；關鍵用戶流程必測。
+- 程式碼審查：每 PR 至少一人審查；重大變更需技術負責人簽核。
+
+## Security & Performance
+- 輸入驗證：前後端雙重驗證；XSS/CSRF 防護。
+- 效能：關鍵頁面 LCP < 2.5s；API 回應 < 500ms。
+- 監控：錯誤追蹤（Sentry）、效能監控（如 DataDog）。
+
+## Deployment & DevOps
+- 環境：dev/staging/prod 三環境；CI/CD 自動化部署。
+- 容器化：Docker + Docker Compose；一鍵啟動開發環境。
+- 備份：資料庫每日備份；重要資料異地存儲。
+
+## Documentation
+- API 文檔：OpenAPI/Swagger；版本控制。
+- 架構圖：Mermaid 繪製；定期更新。
+- 變更日誌：每版本記錄；重大變更標註影響範圍。

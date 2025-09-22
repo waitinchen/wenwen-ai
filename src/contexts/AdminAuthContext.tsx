@@ -7,7 +7,7 @@ interface AdminAuthContextType {
   isLoading: boolean
   permissions: string[]
   hasPermission: (permission: string) => boolean
-  login: (adminData: AdminLoginData) => void
+  login: (adminData: AdminLoginData, rememberMe?: boolean) => void
   logout: () => Promise<void>
   isAuthenticated: boolean
 }
@@ -52,16 +52,33 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
     async function loadStoredAuth() {
       setIsLoading(true)
       try {
-        const storedToken = localStorage.getItem('admin_token')
+        // 優先檢查 localStorage（記住登入狀態）
+        let storedToken = localStorage.getItem('admin_token')
+        let isRemembered = localStorage.getItem('admin_remember_me') === 'true'
+        
+        // 如果沒有記住登入狀態，檢查 sessionStorage
+        if (!storedToken) {
+          storedToken = sessionStorage.getItem('admin_token')
+          isRemembered = false
+        }
+        
         if (storedToken) {
           const authData = await adminVerifyToken(storedToken)
           setAdmin(authData.admin)
           setToken(storedToken)
           setPermissions(authData.admin.permissions || [])
+          
+          // 如果記住登入狀態，確保 token 在 localStorage 中
+          if (isRemembered) {
+            localStorage.setItem('admin_token', storedToken)
+            localStorage.setItem('admin_remember_me', 'true')
+          }
         }
       } catch (error) {
         console.error('Token verification failed:', error)
         localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_remember_me')
+        sessionStorage.removeItem('admin_token')
       } finally {
         setIsLoading(false)
       }
@@ -70,11 +87,20 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
     loadStoredAuth()
   }, [])
 
-  const login = (adminData: AdminLoginData) => {
+  const login = (adminData: AdminLoginData, rememberMe: boolean = true) => {
     setAdmin(adminData.admin)
     setToken(adminData.token)
     setPermissions(adminData.admin.permissions || [])
-    localStorage.setItem('admin_token', adminData.token)
+    
+    if (rememberMe) {
+      localStorage.setItem('admin_token', adminData.token)
+      localStorage.setItem('admin_remember_me', 'true')
+    } else {
+      // 如果不記住，使用 sessionStorage（關閉瀏覽器後失效）
+      sessionStorage.setItem('admin_token', adminData.token)
+      localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_remember_me')
+    }
   }
 
   const logout = async () => {
@@ -89,6 +115,8 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       setToken(null)
       setPermissions([])
       localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_remember_me')
+      sessionStorage.removeItem('admin_token')
     }
   }
 

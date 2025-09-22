@@ -22,6 +22,9 @@ const QuickQuestionsPage = lazy(() => import('@/components/admin/QuickQuestionsP
 const ActivitiesPage = lazy(() => import('@/components/admin/ActivitiesPage'))
 const ContentWarningManager = lazy(() => import('@/components/admin/ContentWarningManager'))
 const InteractionFilterPage = lazy(() => import('@/components/admin/InteractionFilterPage'))
+const SystemHealthDashboard = lazy(() => import('@/components/admin/SystemHealthDashboard'))
+const TestResults = lazy(() => import('@/components/admin/TestResults'))
+const VersionManagement = lazy(() => import('@/components/admin/VersionManagement'))
 const ProtectedRoute = lazy(() => import('@/components/admin/ProtectedRoute'))
 
 function App() {
@@ -64,6 +67,11 @@ function App() {
                     <Route path="ai-config" element={<AIConfigManagement />} />
                     <Route path="content-warnings" element={<ContentWarningManager />} />
                     <Route path="interaction-filters" element={<InteractionFilterPage />} />
+                    
+                    {/* 系統監控 */}
+                    <Route path="health" element={<SystemHealthDashboard />} />
+                    <Route path="tests" element={<TestResults />} />
+                    <Route path="version" element={<VersionManagement />} />
                   </Route>
                 </Routes>
               </Suspense>

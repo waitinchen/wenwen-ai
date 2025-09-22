@@ -1,0 +1,40 @@
+# name: Gao Wenwen Versioning Rules
+# scope: repo
+# when: always
+# description: 高文文版本管理與驗收標準
+
+## Version Management
+- 版本號：Semantic Versioning (MAJOR.MINOR.PATCH)
+- 格式：WEN X.Y.Z (如 WEN 1.0.3)
+- 更新頻率：功能更新時自動更新版本號
+- 追蹤：Git commit hash + 構建時間戳
+
+## Quality Standards
+- 意圖命中率：≥ 90%
+- 回答可用性：≥ 4.2/5
+- 拒答規範合格率：100%
+- 資料驗證通過率：100%
+
+## Testing Requirements
+- 自動驗收測試：每次提交必跑
+- 夜間回歸測試：每日 02:00 執行
+- 測試覆蓋率：核心功能 100%
+- 失敗處理：自動警報 + 修復提案
+
+## Deployment Gates
+- 資料驗證：JSON/JSONL 格式檢查
+- API 煙霧測試：端點回應驗證
+- 對話驗收：意圖識別 + 內容品質
+- 構建測試：TypeScript + ESLint 檢查
+
+## Monitoring & Alerts
+- 通過率監控：< 95% 觸發警報
+- 效能監控：回應時間 < 2 秒
+- 錯誤追蹤：自動記錄失敗案例
+- 趨勢分析：30天歷史報表
+
+## Continuous Improvement
+- 自動修復：失敗時自動提案修復
+- 根因分析：三次失敗後自動分析
+- 版本追蹤：完整的更新日誌
+- 品質提升：根據測試結果優化

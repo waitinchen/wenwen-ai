@@ -1,0 +1,4 @@
+{"q":"文文 下午好","expected_intent":"greeting","must_include":["午安","美食","交通","停車"],"deny":["23歲","重複自介"]}
+{"q":"你是誰","expected_intent":"who_are_you","must_include":["高文文","客服","鳳山"],"deny":["重複自介"]}
+{"q":"鳳山到高雄車站怎麼去？","expected_intent":"mrt_route","must_include":["橘線","紅線"],"deny":["即時班表"]}
+{"q":"我要找停車場","expected_intent":"parking_query","must_include":["停車場","導航"],"deny":["重複自介"]}

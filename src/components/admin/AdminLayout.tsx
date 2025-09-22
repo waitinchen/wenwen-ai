@@ -15,7 +15,11 @@ import {
   Zap,
   Calendar,
   AlertTriangle,
-  Filter
+  Filter,
+  Heart,
+  TestTube,
+  GitBranch,
+  Tag
 } from 'lucide-react'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { cn } from '@/lib/utils'
@@ -108,6 +112,26 @@ const AdminLayout = () => {
           path: '/admin/interaction-filters',
           label: '互動攔截',
           icon: Filter
+        }
+      ] as MenuItem[]
+    },
+    {
+      title: '系統監控',
+      items: [
+        {
+          path: '/admin/health',
+          label: '健康檢查',
+          icon: Heart
+        },
+        {
+          path: '/admin/tests',
+          label: '自動測試',
+          icon: TestTube
+        },
+        {
+          path: '/admin/version',
+          label: '版本管理',
+          icon: GitBranch
         }
       ] as MenuItem[]
     }

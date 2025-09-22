@@ -19,6 +19,9 @@ const Message: React.FC<MessageProps> = ({
   userAvatarUrl,
   userDisplayName
 }) => {
+  // 確保 content 不為 undefined 或 null
+  const safeContent = content || ''
+  
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('zh-TW', {
       hour: '2-digit',
@@ -33,7 +36,7 @@ const Message: React.FC<MessageProps> = ({
         <div className="bg-[#06C755] text-white px-4 py-3 rounded-2xl rounded-tr-md max-w-[80%] break-words shadow-sm">
           {/* 消息內容 */}
           <div className="leading-relaxed whitespace-pre-wrap text-sm">
-            {content.split('\n').map((line, index) => {
+            {safeContent.split('\n').map((line, index) => {
               // 處理markdown格式的粗體文字 **text**
               if (line.includes('**')) {
                 const parts = line.split(/\*\*(.*?)\*\*/g)
@@ -44,16 +47,14 @@ const Message: React.FC<MessageProps> = ({
                         <strong key={partIndex} className="font-semibold">{part}</strong>
                       ) : (
                         <span key={partIndex}>{part}</span>
-                      )
-                    )}
-                    {index < content.split('\n').length - 1 && <br />}
-                  </div>
+                    )
+                  )}
+                </div>
                 )
               }
               return (
                 <div key={index}>
                   {line}
-                  {index < content.split('\n').length - 1 && <br />}
                 </div>
               )
             })}
@@ -110,7 +111,7 @@ const Message: React.FC<MessageProps> = ({
       <div className="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-md max-w-[80%] break-words shadow-sm">
         {/* 消息內容 */}
         <div className="leading-relaxed whitespace-pre-wrap text-sm">
-          {content.split('\n').map((line, index) => {
+          {safeContent.split('\n').map((line, index) => {
             // 處理markdown格式的粗體文字 **text**
             if (line.includes('**')) {
               const parts = line.split(/\*\*(.*?)\*\*/g)
@@ -123,14 +124,12 @@ const Message: React.FC<MessageProps> = ({
                       <span key={partIndex}>{part}</span>
                     )
                   )}
-                  {index < content.split('\n').length - 1 && <br />}
                 </div>
               )
             }
             return (
               <div key={index}>
                 {line}
-                {index < content.split('\n').length - 1 && <br />}
               </div>
             )
           })}

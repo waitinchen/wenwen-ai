@@ -29,6 +29,30 @@ const ChatInterface: React.FC = () => {
   // 常用問題推薦 - 從資料庫加載
   const [quickSuggestions, setQuickSuggestions] = useState<string[]>([]);
 
+  // 載入快速建議
+  const loadQuickSuggestions = async () => {
+    try {
+      const { getQuickQuestions } = await import('@/lib/api')
+      const questions = await getQuickQuestions()
+      const enabledQuestions = questions
+        .filter(q => q.is_enabled)
+        .sort((a, b) => a.display_order - b.display_order)
+        .map(q => q.question)
+      setQuickSuggestions(enabledQuestions)
+    } catch (error) {
+      console.error('載入快速建議失敗:', error)
+      // 使用預設建議
+      setQuickSuggestions([
+        '文山特區有哪些推薦餐廳？',
+        '有什麼美食推薦？',
+        '停車資訊',
+        '怎麼去文山特區？',
+        '有哪些停車場？',
+        '商家營業時間'
+      ])
+    }
+  }
+
   // 使用LINE用戶資訊創建歡迎訊息
   const createWelcomeMessage = (): ChatMessage => {
     const baseMessage = '嗨！我是高文文～23歲的高雄女孩！😊\n\n歡迎來到文山特區商圈！我是大家的專屬客服助理，很開心幫大家介紹咱們的：\n\n🍽️ 美食餐廳推薦（超熟的！）\n🏪 商店資訊查詢\n🅿️ 交通停車指引\n🎁 活動優惠資訊'
@@ -52,33 +76,7 @@ const ChatInterface: React.FC = () => {
 
   // 加载快速問題
   useEffect(() => {
-    const loadQuickQuestions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('quick_questions')
-          .select('question')
-          .eq('is_enabled', true)
-          .order('display_order')
-          .limit(6);
-
-        if (data && !error) {
-          setQuickSuggestions(data.map(q => q.question));
-        }
-      } catch (error) {
-        console.error('加载快速問題失败:', error);
-        // 使用預設問題
-        setQuickSuggestions([
-          '有什麼美食推薦？',
-          '怎麼去文山特區？',
-          '有哪些停車場？',
-          '有什麼優惠活動？',
-          '適合親子的地方嗎？',
-          '可以帶寳物嗎？'
-        ]);
-      }
-    };
-
-    loadQuickQuestions();
+    loadQuickSuggestions();
   }, []);
 
   // 滾動到最新訊息

@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-09-22T09:15:11.059Z",
+  "total_tests": 4,
+  "passed_tests": 4,
+  "failed_tests": 0,
+  "pass_rate": "100.0",
+  "results": [
+    {
+      "testCase": "文文 下午好",
+      "expected_intent": "greeting",
+      "actual_intent": "greeting",
+      "response": "午安～要不要我幫你看看附近停車場或咖啡廳？今天要查美食、交通還是停車呢？",
+      "validation": {
+        "intent_match": true,
+        "must_include": [
+          {
+            "text": "午安",
+            "found": true
+          },
+          {
+            "text": "美食",
+            "found": true
+          },
+          {
+            "text": "交通",
+            "found": true
+          },
+          {
+            "text": "停車",
+            "found": true
+          }
+        ],
+        "deny_violations": [
+          {
+            "text": "23歲",
+            "found": false
+          },
+          {
+            "text": "重複自介",
+            "found": false
+          }
+        ],
+        "overall_pass": true
+      },
+      "pass": true
+    },
+    {
+      "testCase": "你是誰",
+      "expected_intent": "who_are_you",
+      "actual_intent": "who_are_you",
+      "response": "我是高文文，高雄鳳山的在地客服小幫手。可以幫你查交通、美食、停車與民生服務～",
+      "validation": {
+        "intent_match": true,
+        "must_include": [
+          {
+            "text": "高文文",
+            "found": true
+          },
+          {
+            "text": "客服",
+            "found": true
+          },
+          {
+            "text": "鳳山",
+            "found": true
+          }
+        ],
+        "deny_violations": [
+          {
+            "text": "重複自介",
+            "found": false
+          }
+        ],
+        "overall_pass": true
+      },
+      "pass": true
+    },
+    {
+      "testCase": "鳳山到高雄車站怎麼去？",
+      "expected_intent": "mrt_route",
+      "actual_intent": "mrt_route",
+      "response": "從鳳山到高雄車站，你可以搭高雄捷運橘線到美麗島站，再轉紅線到高雄車站，大概30分鐘就到了！",
+      "validation": {
+        "intent_match": true,
+        "must_include": [
+          {
+            "text": "橘線",
+            "found": true
+          },
+          {
+            "text": "紅線",
+            "found": true
+          }
+        ],
+        "deny_violations": [
+          {
+            "text": "即時班表",
+            "found": false
+          }
+        ],
+        "overall_pass": true
+      },
+      "pass": true
+    },
+    {
+      "testCase": "我要找停車場",
+      "expected_intent": "parking_query",
+      "actual_intent": "parking_query",
+      "response": "我來推薦鳳山區的優質停車場！🚗 這些都是我精挑細選的：\n\n**1. 停車場1** 🅿️\n📍 地址\n💰 費率\n\n**要不要我幫你導航到最近的停車場？** 🗺️",
+      "validation": {
+        "intent_match": true,
+        "must_include": [
+          {
+            "text": "停車場",
+            "found": true
+          },
+          {
+            "text": "導航",
+            "found": true
+          }
+        ],
+        "deny_violations": [
+          {
+            "text": "重複自介",
+            "found": false
+          }
+        ],
+        "overall_pass": true
+      },
+      "pass": true
+    }
+  ]
+}
