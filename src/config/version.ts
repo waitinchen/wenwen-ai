@@ -24,17 +24,26 @@ export interface ChangelogEntry {
 
 // 當前版本信息
 export const CURRENT_VERSION: VersionInfo = {
-  version: 'WEN 1.0.5',
-  buildNumber: '20250922-002',
+  version: 'WEN 1.0.6',
+  buildNumber: '20250922-003',
   releaseDate: '2025-09-22',
   buildTime: new Date().toISOString(),
   environment: 'production',
-  gitCommit: process.env.VITE_GIT_COMMIT || 'claude-api-fix',
+  gitCommit: process.env.VITE_GIT_COMMIT || 'conversation-history-fix',
   gitBranch: process.env.VITE_GIT_BRANCH || 'main'
 }
 
 // 版本歷史記錄
 export const VERSION_HISTORY: VersionInfo[] = [
+  {
+    version: 'WEN 1.0.6',
+    buildNumber: '20250922-003',
+    releaseDate: '2025-09-22',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'conversation-history-fix',
+    gitBranch: 'main'
+  },
   {
     version: 'WEN 1.0.5',
     buildNumber: '20250922-002',
@@ -75,6 +84,18 @@ export const VERSION_HISTORY: VersionInfo[] = [
 
 // 更新日誌
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    id: 'conversation-history-fix-20250922',
+    version: 'WEN 1.0.6',
+    date: '2025-09-22',
+    type: 'bugfix',
+    category: '管理後台',
+    title: '修復對話歷史管理頁面空白問題',
+    description: '修復對話歷史管理頁面完全空白問題，移除不存在的 user_profiles 表依賴，添加錯誤處理和 Mock 資料回退邏輯，確保管理後台正常運作',
+    author: 'C謀',
+    impact: 'high',
+    status: 'deployed'
+  },
   {
     id: 'claude-api-fix-20250922',
     version: 'WEN 1.0.5',
