@@ -24,17 +24,35 @@ export interface ChangelogEntry {
 
 // 當前版本信息
 export const CURRENT_VERSION: VersionInfo = {
-  version: 'WEN 1.0.3',
-  buildNumber: '20250122-010',
-  releaseDate: '2025-01-22',
+  version: 'WEN 1.0.4',
+  buildNumber: '20250922-001',
+  releaseDate: '2025-09-22',
   buildTime: new Date().toISOString(),
   environment: 'production',
-  gitCommit: process.env.VITE_GIT_COMMIT || 'eval-system',
+  gitCommit: process.env.VITE_GIT_COMMIT || 'partner-stores-fix',
   gitBranch: process.env.VITE_GIT_BRANCH || 'main'
 }
 
 // 版本歷史記錄
 export const VERSION_HISTORY: VersionInfo[] = [
+  {
+    version: 'WEN 1.0.4',
+    buildNumber: '20250922-001',
+    releaseDate: '2025-09-22',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'partner-stores-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.0.3',
+    buildNumber: '20250122-010',
+    releaseDate: '2025-01-22',
+    buildTime: '2025-01-22T14:00:00.000Z',
+    environment: 'production',
+    gitCommit: 'eval-system',
+    gitBranch: 'main'
+  },
   {
     version: 'WEN 1.0.0',
     buildNumber: '20250122-001',
@@ -49,15 +67,15 @@ export const VERSION_HISTORY: VersionInfo[] = [
 // 更新日誌
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    id: 'wen-1-0-4-432',
+    id: 'partner-stores-fix-20250922',
     version: 'WEN 1.0.4',
     date: '2025-09-22',
-    type: 'feature',
-    category: '系統更新',
-    title: '版本更新',
-    description: '版本更新',
-    author: '開發團隊',
-    impact: 'medium',
+    type: 'bugfix',
+    category: '特約商家管理',
+    title: '修復特約商家無法保存問題',
+    description: '修復特約商家狀態無法保存的問題，強化布林值轉換邏輯，確保前端狀態與DB一致性，建立自動驗收腳本',
+    author: 'C謀',
+    impact: 'high',
     status: 'deployed'
   },
   {
