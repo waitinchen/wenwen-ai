@@ -24,17 +24,26 @@ export interface ChangelogEntry {
 
 // 當前版本信息
 export const CURRENT_VERSION: VersionInfo = {
-  version: 'WEN 1.0.4',
-  buildNumber: '20250922-001',
+  version: 'WEN 1.0.5',
+  buildNumber: '20250922-002',
   releaseDate: '2025-09-22',
   buildTime: new Date().toISOString(),
   environment: 'production',
-  gitCommit: process.env.VITE_GIT_COMMIT || 'partner-stores-fix',
+  gitCommit: process.env.VITE_GIT_COMMIT || 'claude-api-fix',
   gitBranch: process.env.VITE_GIT_BRANCH || 'main'
 }
 
 // 版本歷史記錄
 export const VERSION_HISTORY: VersionInfo[] = [
+  {
+    version: 'WEN 1.0.5',
+    buildNumber: '20250922-002',
+    releaseDate: '2025-09-22',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'claude-api-fix',
+    gitBranch: 'main'
+  },
   {
     version: 'WEN 1.0.4',
     buildNumber: '20250922-001',
@@ -66,6 +75,18 @@ export const VERSION_HISTORY: VersionInfo[] = [
 
 // 更新日誌
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    id: 'claude-api-fix-20250922',
+    version: 'WEN 1.0.5',
+    date: '2025-09-22',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '修復高文文系統繁忙問題',
+    description: '修復高文文無法回應問題，啟用真實 Edge Function API，修復前端 API 調用邏輯，確保高文文能正常回應用戶查詢',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'deployed'
+  },
   {
     id: 'partner-stores-fix-20250922',
     version: 'WEN 1.0.4',
