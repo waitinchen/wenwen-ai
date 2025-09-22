@@ -3,7 +3,6 @@ import { Loader2, MessageCircle, RefreshCw, Settings, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { sendMessage, type ChatResponse } from '@/lib/api'
-import { sendChatMessage, getChatHistory, type ChatResponse as NewChatResponse } from '@/lib/chatApi'
 import { supabase } from '@/lib/supabase'
 import { useUserAuth } from '@/contexts/UserAuthContext'
 import Message from '@/components/Message'
@@ -123,34 +122,27 @@ const ChatInterface: React.FC = () => {
     setError(null)
 
     try {
-      // 使用新的聊天 API
-      const response: NewChatResponse = await sendChatMessage(
-        sessionId || null,
+      // 使用 Edge Function API
+      const response: ChatResponse = await sendMessage(
         content,
-        displayName,
-        avatarUrl
+        sessionId,
+        lineUser?.line_uid
       )
 
-      if (!response.ok) {
-        throw new Error(response.error || '發送訊息失敗')
-      }
-
       // 更新sessionId
-      if (response.session_id && !sessionId) {
-        setSessionId(response.session_id)
+      if (response.sessionId && !sessionId) {
+        setSessionId(response.sessionId)
       }
 
       // 添加 AI 回覆
-      if (response.assistant) {
-        const botMessage: ChatMessage = {
-          id: `bot-${Date.now()}`,
-          content: response.assistant.content,
-          isUser: false,
-          timestamp: new Date().toISOString()
-        }
-
-        setMessages(prev => [...prev, botMessage])
+      const botMessage: ChatMessage = {
+        id: `bot-${Date.now()}`,
+        content: response.response,
+        isUser: false,
+        timestamp: new Date().toISOString()
       }
+
+      setMessages(prev => [...prev, botMessage])
     } catch (error) {
       console.error('Failed to send message:', error)
       setError('很抱歉，目前系統繁忙，請稍後再試或刷新頁面。')

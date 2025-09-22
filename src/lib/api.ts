@@ -12,15 +12,9 @@ export async function sendMessage(
   sessionId?: string,
   lineUid?: string
 ): Promise<ChatResponse> {
-  // 暫時強制使用模擬API來測試肯塔基美語推薦
-  console.log('使用模擬聊天API進行測試')
-  const { mockSendMessage } = await import('./mockClaudeChat')
-  return await mockSendMessage(message, sessionId, lineUid)
-  
-  // 原始Edge Function代碼（暫時註釋）
-  /*
   try {
-    // IP地址将由服务器端自动获取，不需要在客户端处理
+    // 使用真實 Edge Function
+    console.log('使用真實 Edge Function API')
     const { data, error } = await supabase.functions.invoke('claude-chat', {
       body: {
         message,
@@ -42,7 +36,6 @@ export async function sendMessage(
     const { mockSendMessage } = await import('./mockClaudeChat')
     return await mockSendMessage(message, sessionId, lineUid)
   }
-  */
 }
 
 // ===== 新增管理後台API =====
