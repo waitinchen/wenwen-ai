@@ -3,6 +3,7 @@ import { Loader2, MessageCircle, RefreshCw, Settings, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { sendMessage, type ChatResponse } from '@/lib/api'
+import { sendChatMessage, getChatHistory, type ChatResponse as NewChatResponse } from '@/lib/chatApi'
 import { supabase } from '@/lib/supabase'
 import { useUserAuth } from '@/contexts/UserAuthContext'
 import Message from '@/components/Message'
@@ -14,6 +15,8 @@ interface ChatMessage {
   content: string
   isUser: boolean
   timestamp: string
+  displayName?: string
+  avatarUrl?: string
 }
 
 const ChatInterface: React.FC = () => {
@@ -21,6 +24,8 @@ const ChatInterface: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
+  const [userDisplayName, setUserDisplayName] = useState('訪客')
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | undefined>()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   // 使用LINE用戶認證Context
@@ -96,15 +101,21 @@ const ChatInterface: React.FC = () => {
     setMessages([createWelcomeMessage()])
   }, [lineUser]) // 當lineUser變化時更新歡迎訊息
 
-  // 發送訊息（支援LINE用戶）
+  // 發送訊息（支援完整用戶資料保存）
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return
+
+    // 確定用戶顯示名稱和頭像
+    const displayName = lineUser?.line_display_name || userDisplayName
+    const avatarUrl = lineUser?.line_avatar_url || userAvatarUrl
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       content,
       isUser: true,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      displayName,
+      avatarUrl
     }
 
     setMessages(prev => [...prev, userMessage])
@@ -112,26 +123,34 @@ const ChatInterface: React.FC = () => {
     setError(null)
 
     try {
-      // 如果有LINE用戶且沒有sessionId，先建立聊天會話
-      let currentSessionId = sessionId
-      
-      // LINE用户会话将在claude-chat function中自动处理
+      // 使用新的聊天 API
+      const response: NewChatResponse = await sendChatMessage(
+        sessionId || null,
+        content,
+        displayName,
+        avatarUrl
+      )
 
-      const response: ChatResponse = await sendMessage(content, currentSessionId, lineUser?.line_uid)
-      
+      if (!response.ok) {
+        throw new Error(response.error || '發送訊息失敗')
+      }
+
       // 更新sessionId
-      if (response.sessionId && !currentSessionId) {
-        setSessionId(response.sessionId)
+      if (response.session_id && !sessionId) {
+        setSessionId(response.session_id)
       }
 
-      const botMessage: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        content: response.response,
-        isUser: false,
-        timestamp: response.timestamp
-      }
+      // 添加 AI 回覆
+      if (response.assistant) {
+        const botMessage: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          content: response.assistant.content,
+          isUser: false,
+          timestamp: new Date().toISOString()
+        }
 
-      setMessages(prev => [...prev, botMessage])
+        setMessages(prev => [...prev, botMessage])
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
       setError('很抱歉，目前系統繁忙，請稍後再試或刷新頁面。')

@@ -11,7 +11,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 1. 核心用戶管理表
 -- =================================================
 
--- LINE 用戶表
+-- 用戶資料表 (支援前台匿名用戶)
+CREATE TABLE user_profiles (
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    external_id VARCHAR(255) UNIQUE, -- 前台 cookie / deviceId / OAuth sub
+    display_name VARCHAR(255) NOT NULL,
+    avatar_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- LINE 用戶表 (保留原有結構)
 CREATE TABLE line_users (
     id SERIAL PRIMARY KEY,
     line_uid VARCHAR(255) UNIQUE NOT NULL,
@@ -25,24 +35,25 @@ CREATE TABLE line_users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 聊天會話表
+-- 聊天會話表 (更新結構)
 CREATE TABLE chat_sessions (
-    id SERIAL PRIMARY KEY,
-    session_id VARCHAR(255) UNIQUE NOT NULL,
-    user_ip VARCHAR(45),
-    user_agent TEXT,
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    user_id VARCHAR(255) REFERENCES user_profiles(id),
     line_user_id INTEGER REFERENCES line_users(id),
+    client_ip VARCHAR(45),
+    user_agent TEXT,
     started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    message_count INTEGER DEFAULT 0
+    last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    message_count INTEGER DEFAULT 0,
+    last_message_preview TEXT -- 最後一句話預覽 (前80字)
 );
 
--- 聊天消息表
+-- 聊天消息表 (更新結構)
 CREATE TABLE chat_messages (
-    id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES chat_sessions(id),
-    message_type VARCHAR(20) DEFAULT 'user' CHECK (message_type IN ('user', 'bot', 'system')),
-    message_text TEXT NOT NULL,
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    session_id VARCHAR(255) REFERENCES chat_sessions(id),
+    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'assistant', 'system')),
+    content TEXT NOT NULL,
     response_time INTEGER,
     user_feedback INTEGER CHECK (user_feedback IN (1, -1)),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -310,10 +321,20 @@ CREATE INDEX IF NOT EXISTS idx_conversations_session_id ON conversations(session
 CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_user_ip ON conversations(user_ip);
 
+-- 用戶資料索引
+CREATE INDEX IF NOT EXISTS idx_user_profiles_external_id ON user_profiles(external_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_display_name ON user_profiles(display_name);
+
 -- 聊天會話索引
-CREATE INDEX IF NOT EXISTS idx_chat_sessions_session_id ON chat_sessions(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_line_user_id ON chat_sessions(line_user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_started_at ON chat_sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_last_active ON chat_sessions(last_active DESC);
+
+-- 聊天消息索引
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_role ON chat_messages(role);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at DESC);
 
 -- LINE 用戶索引
 CREATE INDEX IF NOT EXISTS idx_line_users_line_uid ON line_users(line_uid);

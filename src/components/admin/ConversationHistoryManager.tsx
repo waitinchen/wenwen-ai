@@ -6,16 +6,20 @@ import { cn } from '@/lib/utils'
 import { testDataGenerator } from '@/utils/testDataGenerator'
 
 interface ConversationSession {
-  id: number
-  session_id: string
-  user_ip: string
-  user_agent: string
+  id: string
+  user_id?: string
+  line_user_id?: number
+  client_ip?: string
+  user_agent?: string
   started_at: string
-  last_activity: string
+  last_active: string
   message_count: number
-  latest_message?: string
-  user_display_name: string
-  user_avatar?: string
+  last_message_preview?: string
+  user_profiles?: {
+    id: string
+    display_name: string
+    avatar_url?: string
+  } | null
   line_users?: {
     id: number
     line_uid: string
@@ -52,10 +56,31 @@ const ConversationHistoryManager: React.FC = () => {
     try {
       setLoading(true)
       
-      // 獲取會話列表
+      // 獲取會話列表 (JOIN 用戶資料)
       const { data: sessionData, error: sessionError } = await supabase
         .from('chat_sessions')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          line_user_id,
+          client_ip,
+          user_agent,
+          started_at,
+          last_active,
+          message_count,
+          last_message_preview,
+          user_profiles!inner(
+            id,
+            display_name,
+            avatar_url
+          ),
+          line_users(
+            id,
+            line_uid,
+            line_display_name,
+            line_avatar_url
+          )
+        `)
         .order(sortBy, { ascending: sortOrder === 'asc' })
         .limit(100)
 
@@ -69,83 +94,22 @@ const ConversationHistoryManager: React.FC = () => {
         return
       }
 
-      // 為每個會話獲取LINE用戶信息和最新消息
-      const sessionsWithDetails = await Promise.all(
-        sessionData.map(async (session) => {
-          try {
-            // 獲取LINE用戶資訊
-            let lineUser = null
-            if (session.line_user_id) {
-              const { data: userData } = await supabase
-                .from('line_users')
-                .select('id, line_uid, line_display_name, line_avatar_url')
-                .eq('id', session.line_user_id)
-                .maybeSingle()
-              
-              lineUser = userData
-            }
-
-            // 獲取該會話的最新用戶消息作為預覽
-            const { data: latestMessage } = await supabase
-              .from('chat_messages')
-              .select('message_text')
-              .eq('session_id', session.id) // 使用 chat_sessions 的 id
-              .eq('message_type', 'user')
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
-
-            // 優先顯示LINE用戶信息
-            let userDisplayName = '';
-            let userAvatar = '';
-            
-            if (lineUser && lineUser.line_display_name) {
-              userDisplayName = lineUser.line_display_name;
-              userAvatar = lineUser.line_avatar_url || '';
-            } else {
-              // 顯示更友好的用戶名稱
-              if (session.user_ip && session.user_ip !== 'unknown-client') {
-                userDisplayName = `用戶 (${session.user_ip})`;
-              } else if (session.user_ip === 'unknown-client') {
-                userDisplayName = '遊客用戶';
-              } else {
-                userDisplayName = '未知用戶';
-              }
-            }
-
-            return {
-              ...session,
-              latest_message: latestMessage?.message_text || '無消息記錄',
-              user_display_name: userDisplayName,
-              user_avatar: userAvatar,
-              line_users: lineUser,
-              // 確保必要字段不為null
-              user_ip: session.user_ip || 'unknown',
-              session_id: session.session_id || '',
-              user_agent: session.user_agent || '',
-              started_at: session.started_at || new Date().toISOString(),
-              last_activity: session.last_activity || new Date().toISOString(),
-              message_count: session.message_count || 0
-            }
-          } catch (error) {
-            console.error('處理會話數據錯誤:', error, session)
-            // 返回安全的默認值
-            return {
-              ...session,
-              latest_message: '無法載入消息',
-              user_display_name: '無效用戶',
-              user_avatar: '',
-              line_users: null,
-              user_ip: session.user_ip || 'unknown',
-              session_id: session.session_id || '',
-              user_agent: session.user_agent || '',
-              started_at: session.started_at || new Date().toISOString(),
-              last_activity: session.last_activity || new Date().toISOString(),
-              message_count: session.message_count || 0
-            }
-          }
-        })
-      )
+      // 處理會話資料
+      const sessionsWithDetails = sessionData.map((session) => {
+        return {
+          id: session.id,
+          user_id: session.user_id,
+          line_user_id: session.line_user_id,
+          client_ip: session.client_ip,
+          user_agent: session.user_agent,
+          started_at: session.started_at,
+          last_active: session.last_active,
+          message_count: session.message_count,
+          last_message_preview: session.last_message_preview,
+          user_profiles: session.user_profiles,
+          line_users: session.line_users
+        }
+      })
 
       setSessions(sessionsWithDetails)
 
