@@ -33,7 +33,10 @@
     "migrate:chat": "node scripts/migrate-chat-schema.js",
     "test:chat-persistence": "node scripts/test-chat-persistence.js",
     "test:chat-api": "bash scripts/test-chat-api.sh",
-    "test:chat-api:win": "powershell -ExecutionPolicy Bypass -File scripts/test-chat-api-simple.ps1"
+    "test:chat-api:win": "powershell -ExecutionPolicy Bypass -File scripts/test-chat-api-simple.ps1",
+    "test:partner-stores": "node scripts/auto-test-partner-stores.js",
+    "test:partner-stores:win": "powershell -ExecutionPolicy Bypass -File scripts/run-partner-test.ps1",
+    "test:partner-stores:bat": "scripts/run-partner-test.bat"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
