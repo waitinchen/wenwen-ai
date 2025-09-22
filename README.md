@@ -76,6 +76,8 @@ CLAUDE_API_KEY=sk-ant-api03-your-api-key-here
 NODE_ENV=development
 ```
 
+> ⚠️ 請透過 Secret Manager、CI/CD 變數或本機安全儲存工具管理真實金鑰。Supabase 的 `SUPABASE_SERVICE_ROLE_KEY` 僅應配置在伺服器端環境變數中，切勿寫入前端 `.env` 檔案或版本控制。
+
 #### 4️⃣ 設置 Supabase 資料庫
 ```bash
 # 連接到您的 Supabase 專案
