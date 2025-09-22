@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高文文聊天測試頁面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        #log {
+            width: 100%;
+            height: 300px;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: #f9fafb;
+            resize: vertical;
+        }
+        .test-info {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .test-info h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .test-info ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .test-info li {
+            margin: 4px 0;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 高文文聊天測試頁面</h1>
+        
+        <div class="test-info">
+            <h3>📋 測試說明</h3>
+            <ul>
+                <li>此頁面用於測試前台送訊息功能</li>
+                <li>測試 user_meta（暱稱、頭像、external_id）是否正確傳送</li>
+                <li>測試 session_id 是否正確建立與沿用</li>
+                <li>測試後台列表是否能顯示暱稱、頭像、最後一句摘要</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="nick">暱稱：</label>
+            <input type="text" id="nick" value="兔貝比" placeholder="輸入用戶暱稱">
+        </div>
+
+        <div class="form-group">
+            <label for="avatar">頭像 URL：</label>
+            <input type="text" id="avatar" value="https://example.com/avatar.png" placeholder="輸入頭像 URL">
+        </div>
+
+        <div class="form-group">
+            <label for="externalId">External ID：</label>
+            <input type="text" id="externalId" readonly placeholder="自動生成">
+        </div>
+
+        <div class="button-group">
+            <button onclick="sendMessage('哈囉，高文文！我想問停車。')" id="btn1">
+                發送第1句（建立會話）
+            </button>
+            <button onclick="sendMessage('可以幫我推薦附近停車場嗎？')" id="btn2" disabled>
+                發送第2句（沿用會話）
+            </button>
+            <button onclick="sendMessage('謝謝你的推薦！')" id="btn3" disabled>
+                發送第3句（沿用會話）
+            </button>
+            <button onclick="clearLog()" style="background: #6b7280;">
+                清空日誌
+            </button>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="form-group">
+            <label for="log">測試日誌：</label>
+            <textarea id="log" readonly placeholder="測試結果將顯示在這裡..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let sessionId = null;
+        let externalId = null;
+        let messageCount = 0;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            externalId = getOrSetClientId();
+            document.getElementById('externalId').value = externalId;
+            log('🚀 測試頁面初始化完成');
+            log(`📋 External ID: ${externalId}`);
+        });
+
+        // 產生或讀取 external_id（cookie）
+        function getOrSetClientId() {
+            const key = "wenwen_client_id";
+            const m = document.cookie.match(new RegExp(key + "=([^;]+)"));
+            if (m) return m[1];
+            const v = "client_" + crypto.randomUUID();
+            document.cookie = `${key}=${v}; path=/; max-age=${60*60*24*365}`;
+            return v;
+        }
+
+        // 發送訊息
+        async function sendMessage(text) {
+            const nick = document.getElementById('nick').value || '訪客';
+            const avatar = document.getElementById('avatar').value || null;
+            
+            // 更新按鈕狀態
+            updateButtonStates();
+
+            log(`\n📤 發送訊息: ${text}`);
+            log(`👤 用戶: ${nick}`);
+            log(`🖼️ 頭像: ${avatar || '無'}`);
+            log(`🔑 External ID: ${externalId}`);
+            log(`💬 Session ID: ${sessionId || 'null (新會話)'}`);
+
+            const body = {
+                session_id: sessionId,
+                message: { role: "user", content: text },
+                user_meta: {
+                    external_id: externalId,
+                    display_name: nick,
+                    avatar_url: avatar
+                },
+                context: { 
+                    client_ip: null, 
+                    user_agent: navigator.userAgent 
+                }
+            };
+
+            try {
+                const res = await fetch('/api/chat/message', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Idempotency-Key": crypto.randomUUID()
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+                
+                if (data.ok) {
+                    // 更新 session_id
+                    if (data.session_id && !sessionId) {
+                        sessionId = data.session_id;
+                        log(`✅ 新會話建立: ${sessionId}`);
+                    }
+                    
+                    messageCount++;
+                    log(`✅ 訊息發送成功 (第${messageCount}句)`);
+                    log(`🤖 AI 回覆: ${data.assistant?.content || '無回覆'}`);
+                    
+                    showStatus('success', `✅ 第${messageCount}句訊息發送成功！`);
+                } else {
+                    log(`❌ 發送失敗: ${data.error || '未知錯誤'}`);
+                    showStatus('error', `❌ 發送失敗: ${data.error || '未知錯誤'}`);
+                }
+            } catch (error) {
+                log(`❌ 網路錯誤: ${error.message}`);
+                showStatus('error', `❌ 網路錯誤: ${error.message}`);
+            }
+
+            // 更新按鈕狀態
+            updateButtonStates();
+        }
+
+        // 更新按鈕狀態
+        function updateButtonStates() {
+            const btn1 = document.getElementById('btn1');
+            const btn2 = document.getElementById('btn2');
+            const btn3 = document.getElementById('btn3');
+
+            if (messageCount === 0) {
+                btn1.disabled = false;
+                btn2.disabled = true;
+                btn3.disabled = true;
+            } else if (messageCount === 1) {
+                btn1.disabled = true;
+                btn2.disabled = false;
+                btn3.disabled = true;
+            } else if (messageCount === 2) {
+                btn1.disabled = true;
+                btn2.disabled = true;
+                btn3.disabled = false;
+            } else {
+                btn1.disabled = true;
+                btn2.disabled = true;
+                btn3.disabled = true;
+            }
+        }
+
+        // 顯示狀態
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            // 3秒後清除狀態
+            setTimeout(() => {
+                statusDiv.className = 'status';
+                statusDiv.textContent = '';
+            }, 3000);
+        }
+
+        // 記錄日誌
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.value += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // 清空日誌
+        function clearLog() {
+            document.getElementById('log').value = '';
+            log('🧹 日誌已清空');
+        }
+    </script>
+</body>
+</html>

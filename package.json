@@ -31,7 +31,9 @@
     "seed:merchants": "node scripts/seed-merchants.js",
     "seed:parking": "node scripts/seed-parking.js",
     "migrate:chat": "node scripts/migrate-chat-schema.js",
-    "test:chat-persistence": "node scripts/test-chat-persistence.js"
+    "test:chat-persistence": "node scripts/test-chat-persistence.js",
+    "test:chat-api": "bash scripts/test-chat-api.sh",
+    "test:chat-api:win": "powershell -ExecutionPolicy Bypass -File scripts/test-chat-api-simple.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
