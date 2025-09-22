@@ -49,6 +49,18 @@ export const VERSION_HISTORY: VersionInfo[] = [
 // 更新日誌
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: 'wen-1-0-4-432',
+    version: 'WEN 1.0.4',
+    date: '2025-09-22',
+    type: 'feature',
+    category: '系統更新',
+    title: '版本更新',
+    description: '版本更新',
+    author: '開發團隊',
+    impact: 'medium',
+    status: 'deployed'
+  },
+  {
     id: 'eval-system-20250122',
     version: 'WEN 1.0.3',
     date: '2025-01-22',

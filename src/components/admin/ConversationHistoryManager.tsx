@@ -26,6 +26,13 @@ interface ConversationSession {
     line_display_name: string
     line_avatar_url?: string
   } | null
+  // 為了向後相容，添加舊的欄位名稱
+  user_ip?: string
+  session_id?: string
+  last_activity?: string
+  latest_message?: string
+  user_display_name?: string
+  user_avatar?: string
 }
 
 const ConversationHistoryManager: React.FC = () => {
@@ -96,6 +103,14 @@ const ConversationHistoryManager: React.FC = () => {
 
       // 處理會話資料
       const sessionsWithDetails = sessionData.map((session) => {
+        // 處理 user_profiles 和 line_users 的陣列結構
+        const userProfile = Array.isArray(session.user_profiles) 
+          ? session.user_profiles[0] 
+          : session.user_profiles;
+        const lineUser = Array.isArray(session.line_users) 
+          ? session.line_users[0] 
+          : session.line_users;
+
         return {
           id: session.id,
           user_id: session.user_id,
@@ -106,8 +121,15 @@ const ConversationHistoryManager: React.FC = () => {
           last_active: session.last_active,
           message_count: session.message_count,
           last_message_preview: session.last_message_preview,
-          user_profiles: session.user_profiles,
-          line_users: session.line_users
+          user_profiles: userProfile,
+          line_users: lineUser,
+          // 為了向後相容，添加舊的欄位名稱
+          user_ip: session.client_ip,
+          session_id: session.id,
+          last_activity: session.last_active,
+          latest_message: session.last_message_preview,
+          user_display_name: userProfile?.display_name || lineUser?.line_display_name || '未知用戶',
+          user_avatar: userProfile?.avatar_url || lineUser?.line_avatar_url
         }
       })
 
