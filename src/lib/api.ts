@@ -898,29 +898,58 @@ export async function deleteTrainingData(id: number) {
 
 // 商家資料管理
 export async function createStore(store: any) {
+  console.log('createStore called with store:', store)
+  
+  // 確保布林值正確處理
+  const sanitizedStore = {
+    ...store,
+    is_partner_store: Boolean(store.is_partner_store),
+    is_safe_store: Boolean(store.is_safe_store),
+    has_member_discount: Boolean(store.has_member_discount),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+  
+  console.log('Sanitized store data:', sanitizedStore)
+  console.log('is_partner_store value:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  
   try {
     const { data, error } = await supabase
       .from('stores')
-      .insert(store)
+      .insert(sanitizedStore)
       .select()
       .single()
 
     if (error) throw error
+    console.log('Database create successful:', data)
     return data
   } catch (error) {
     console.warn('Failed to create store in database, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { createMockStore } = await import('./mockStores')
-    return createMockStore(store)
+    return createMockStore(sanitizedStore)
   }
 }
 
 export async function updateStore(id: number, store: any) {
   console.log('updateStore called with id:', id, 'store:', store)
+  
+  // 確保布林值正確處理
+  const sanitizedStore = {
+    ...store,
+    is_partner_store: Boolean(store.is_partner_store),
+    is_safe_store: Boolean(store.is_safe_store),
+    has_member_discount: Boolean(store.has_member_discount),
+    updated_at: new Date().toISOString()
+  }
+  
+  console.log('Sanitized store data:', sanitizedStore)
+  console.log('is_partner_store value:', sanitizedStore.is_partner_store, typeof sanitizedStore.is_partner_store)
+  
   try {
     const { data, error } = await supabase
       .from('stores')
-      .update({ ...store, updated_at: new Date().toISOString() })
+      .update(sanitizedStore)
       .eq('id', id)
       .select()
       .single()
@@ -932,13 +961,13 @@ export async function updateStore(id: number, store: any) {
     console.warn('Failed to update store in database, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { updateMockStore, createMockStore } = await import('./mockStores')
-    const updatedStore = updateMockStore(id, store)
+    const updatedStore = updateMockStore(id, sanitizedStore)
     if (updatedStore) {
       console.log('Updated store in mock data:', updatedStore)
       return updatedStore
     } else {
       console.warn(`Store with id ${id} not found in mock data, creating new one`)
-      const newStore = createMockStore({ ...store, id })
+      const newStore = createMockStore({ ...sanitizedStore, id })
       console.log('Created new store in mock data:', newStore)
       return newStore
     }

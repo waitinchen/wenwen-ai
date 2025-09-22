@@ -281,7 +281,20 @@ export function getAllMockStores(): Store[] {
 export function updateMockStore(id: number, storeData: Partial<Store>): Store | null {
   const storeIndex = mockStores.findIndex(s => s.id === id)
   if (storeIndex !== -1) {
-    mockStores[storeIndex] = { ...mockStores[storeIndex], ...storeData, updated_at: new Date().toISOString() }
+    // 確保布林值正確處理
+    const sanitizedData = {
+      ...storeData,
+      is_partner_store: Boolean(storeData.is_partner_store),
+      is_safe_store: Boolean(storeData.is_safe_store),
+      has_member_discount: Boolean(storeData.has_member_discount),
+      updated_at: new Date().toISOString()
+    }
+    
+    console.log('updateMockStore - Original data:', storeData)
+    console.log('updateMockStore - Sanitized data:', sanitizedData)
+    console.log('updateMockStore - is_partner_store:', sanitizedData.is_partner_store, typeof sanitizedData.is_partner_store)
+    
+    mockStores[storeIndex] = { ...mockStores[storeIndex], ...sanitizedData }
     saveMockStores(mockStores) // 保存到 localStorage
     return mockStores[storeIndex]
   }
@@ -290,25 +303,38 @@ export function updateMockStore(id: number, storeData: Partial<Store>): Store | 
 
 // 創建新的模擬商家
 export function createMockStore(storeData: Partial<Store>): Store {
+  // 確保布林值正確處理
+  const sanitizedData = {
+    ...storeData,
+    is_partner_store: Boolean(storeData.is_partner_store),
+    is_safe_store: Boolean(storeData.is_safe_store),
+    has_member_discount: Boolean(storeData.has_member_discount)
+  }
+  
+  console.log('createMockStore - Original data:', storeData)
+  console.log('createMockStore - Sanitized data:', sanitizedData)
+  console.log('createMockStore - is_partner_store:', sanitizedData.is_partner_store, typeof sanitizedData.is_partner_store)
+  
   const newStore: Store = {
     id: Math.max(...mockStores.map(s => s.id)) + 1,
-    store_name: storeData.store_name || '',
-    owner: storeData.owner || '',
-    role: storeData.role || '',
-    category: storeData.category || '',
-    address: storeData.address || '',
-    phone: storeData.phone || '',
-    business_hours: storeData.business_hours || '',
-    services: storeData.services || '',
-    features: storeData.features || '',
-    is_safe_store: storeData.is_safe_store || false,
-    has_member_discount: storeData.has_member_discount || false,
-    is_partner_store: storeData.is_partner_store || false,
-    facebook_url: storeData.facebook_url || '',
-    website_url: storeData.website_url || '',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    store_name: sanitizedData.store_name || '',
+    owner: sanitizedData.owner || '',
+    role: sanitizedData.role || '',
+    category: sanitizedData.category || '',
+    address: sanitizedData.address || '',
+    phone: sanitizedData.phone || '',
+    business_hours: sanitizedData.business_hours || '',
+    services: sanitizedData.services || '',
+    features: sanitizedData.features || '',
+    is_safe_store: sanitizedData.is_safe_store,
+    has_member_discount: sanitizedData.has_member_discount,
+    is_partner_store: sanitizedData.is_partner_store,
+    facebook_url: sanitizedData.facebook_url || '',
+    website_url: sanitizedData.website_url || '',
+    created_at: sanitizedData.created_at || new Date().toISOString(),
+    updated_at: sanitizedData.updated_at || new Date().toISOString()
   }
+  
   mockStores.push(newStore)
   saveMockStores(mockStores) // 保存到 localStorage
   return newStore

@@ -707,8 +707,12 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={formData.is_partner_store || false}
-                  onChange={(e) => setFormData({ ...formData, is_partner_store: e.target.checked })}
+                  checked={Boolean(formData.is_partner_store)}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    console.log('特約商家 checkbox changed:', checked)
+                    setFormData({ ...formData, is_partner_store: checked })
+                  }}
                   className="rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
                 />
                 <CheckCircle className="w-4 h-4 text-blue-500" />
