@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./data/memory/wenwen-memory.db"
 }
 
 model Merchant {
@@ -30,9 +30,7 @@ model Merchant {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   
-  // Relations
-  chatSessions      ChatSession[]
-  activities        Activity[]
+  // Relations - 暫時移除，專注於記憶功能
   
   @@map("merchants")
 }
@@ -42,4 +40,25 @@ enum MerchantStatus {
   INACTIVE
   SUSPENDED
   PENDING
+}
+
+// 高文文長記憶模型
+model MemoryItem {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")           // 用戶ID
+  sessionId   String?  @map("session_id")        // 會話ID
+  content     String                              // 記憶內容（已加密）
+  summary     String?                             // 摘要（已加密）
+  intent      String?                             // 意圖分類
+  keywords    String?                             // 關鍵字（JSON）
+  meta        String?                             // 元資料（JSON）
+  encrypted   Boolean  @default(true)            // 是否加密
+  expiresAt   DateTime? @map("expires_at")       // 到期時間
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("memory_items")
+  @@index([userId])
+  @@index([sessionId])
+  @@index([expiresAt])
 }

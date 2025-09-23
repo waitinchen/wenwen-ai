@@ -51,6 +51,11 @@ const AdminLayout = () => {
           path: '/admin/analytics',
           label: '資料分析',
           icon: BarChart3
+        },
+        {
+          path: '/admin/memory',
+          label: '記憶管理',
+          icon: Brain
         }
       ] as MenuItem[]
     },

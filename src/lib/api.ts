@@ -10,17 +10,24 @@ export interface ChatResponse {
 export async function sendMessage(
   message: string,
   sessionId?: string,
-  lineUid?: string
+  lineUid?: string,
+  userMeta?: { external_id?: string, display_name?: string, avatar_url?: string }
 ): Promise<ChatResponse> {
   try {
-    // 使用真實 Edge Function
-    console.log('使用真實 Edge Function API')
+    // 使用新的 API 格式
+    console.log('使用修復後的 Edge Function API')
     const { data, error } = await supabase.functions.invoke('claude-chat', {
       body: {
-        message,
-        sessionId,
-        line_uid: lineUid
-        // userIp 已移除，将由服务器端从请求头获取
+        session_id: sessionId,
+        message: { 
+          role: 'user', 
+          content: message 
+        },
+        user_meta: {
+          external_id: userMeta?.external_id || lineUid || getClientId(),
+          display_name: userMeta?.display_name,
+          avatar_url: userMeta?.avatar_url
+        }
       }
     })
 
@@ -37,6 +44,19 @@ export async function sendMessage(
     return await mockSendMessage(message, sessionId, lineUid)
   }
 }
+
+// 生成客戶端 ID 的輔助函數
+function getClientId(): string {
+  let clientId = localStorage.getItem('wenwen-client-id')
+  if (!clientId) {
+    clientId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('wenwen-client-id', clientId)
+  }
+  return clientId
+}
+
+// 布林值轉換函數
+const toBool = (v: any): boolean => v === true || v === 'true'
 
 // ===== 新增管理後台API =====
 
@@ -894,10 +914,9 @@ export async function createStore(store: any) {
   console.log('createStore called with store:', store)
   
   // 強化布林值轉換邏輯 - 明確處理各種輸入類型
+  // 使用新的 toBool 函數
   const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
-    if (value === true || value === 'true' || value === 1 || value === '1') return true
-    if (value === false || value === 'false' || value === 0 || value === '0') return false
-    return defaultValue
+    return toBool(value) || defaultValue
   }
   
   const sanitizedStore = {
@@ -962,10 +981,9 @@ export async function updateStore(id: number, store: any) {
   console.log('updateStore called with id:', id, 'store:', store)
   
   // 強化布林值轉換邏輯 - 明確處理各種輸入類型
+  // 使用新的 toBool 函數
   const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
-    if (value === true || value === 'true' || value === 1 || value === '1') return true
-    if (value === false || value === 'false' || value === 0 || value === '0') return false
-    return defaultValue
+    return toBool(value) || defaultValue
   }
   
   const sanitizedStore = {

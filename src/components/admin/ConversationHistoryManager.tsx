@@ -138,7 +138,7 @@ const ConversationHistoryManager: React.FC = () => {
     try {
       setLoading(true)
       
-      // 獲取會話列表 (移除不存在的 user_profiles JOIN)
+      // 獲取會話列表 (支援新的用戶元資料格式)
       const { data: sessionData, error: sessionError } = await supabase
         .from('chat_sessions')
         .select(`
@@ -151,6 +151,7 @@ const ConversationHistoryManager: React.FC = () => {
           last_active,
           message_count,
           last_message_preview,
+          user_meta,
           line_users(
             id,
             line_uid,
@@ -185,12 +186,26 @@ const ConversationHistoryManager: React.FC = () => {
         return
       }
 
-      // 處理會話資料 (移除 user_profiles 依賴)
+      // 處理會話資料 (支援新的用戶元資料格式)
       const sessionsWithDetails = sessionData.map((session) => {
         // 處理 line_users 的陣列結構
-        const lineUser = Array.isArray(session.line_users) 
-          ? session.line_users[0] 
+        const lineUser = Array.isArray(session.line_users)
+          ? session.line_users[0]
           : session.line_users;
+
+        // 解析用戶元資料
+        let userMeta = null;
+        try {
+          userMeta = session.user_meta ? JSON.parse(session.user_meta) : null;
+        } catch (error) {
+          console.warn('解析用戶元資料失敗:', error);
+        }
+
+        // 優先使用 user_meta 中的資訊，其次使用 line_users
+        const displayName = userMeta?.display_name || 
+                           lineUser?.line_display_name || 
+                           `用戶 ${session.client_ip || '未知'}`;
+        const avatarUrl = userMeta?.avatar_url || lineUser?.line_avatar_url;
 
         return {
           id: session.id,
@@ -209,8 +224,8 @@ const ConversationHistoryManager: React.FC = () => {
           session_id: session.id,
           last_activity: session.last_active,
           latest_message: session.last_message_preview,
-          user_display_name: lineUser?.line_display_name || `用戶 ${session.client_ip || '未知'}`,
-          user_avatar: lineUser?.line_avatar_url
+          user_display_name: displayName,
+          user_avatar: avatarUrl
         }
       })
 
