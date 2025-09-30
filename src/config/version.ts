@@ -24,17 +24,143 @@ export interface ChangelogEntry {
 
 // 當前版本信息
 export const CURRENT_VERSION: VersionInfo = {
-  version: 'WEN 1.0.6',
-  buildNumber: '20250922-003',
-  releaseDate: '2025-09-22',
+  version: 'WEN 1.4.6',
+  buildNumber: '20250930-001',
+  releaseDate: '2025-09-30',
   buildTime: new Date().toISOString(),
   environment: 'production',
-  gitCommit: process.env.VITE_GIT_COMMIT || 'conversation-history-fix',
-  gitBranch: process.env.VITE_GIT_BRANCH || 'main'
+  gitCommit: process.env.VITE_GIT_COMMIT || 'critical-fixes-and-spa-routing',
+  gitBranch: process.env.VITE_GIT_BRANCH || 'fix/wenwen-debug-sprint'
 }
 
 // 版本歷史記錄
 export const VERSION_HISTORY: VersionInfo[] = [
+  {
+    version: 'WEN 1.4.6',
+    buildNumber: '20250930-001',
+    releaseDate: '2025-09-30',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'critical-fixes-and-spa-routing',
+    gitBranch: 'fix/wenwen-debug-sprint'
+  },
+  {
+    version: 'WEN 1.4.0',
+    buildNumber: '20250925-001',
+    releaseDate: '2025-09-25',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'response-script-management-system',
+    gitBranch: 'fix/wenwen-debug-sprint'
+  },
+  {
+    version: 'WEN 1.3.0',
+    buildNumber: '20250103-001',
+    releaseDate: '2025-01-03',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'five-layer-architecture-upgrade',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.2.0',
+    buildNumber: '20250923-011',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'voice-soul-engine-v2-architecture',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.8',
+    buildNumber: '20250923-010',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'ai-hallucination-emergency-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.7',
+    buildNumber: '20250923-009',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'universal-ai-hallucination-prevention',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.6',
+    buildNumber: '20250923-008',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'english-recommendation-optimization',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.5',
+    buildNumber: '20250923-007',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'ai-hallucination-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.4',
+    buildNumber: '20250923-006',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'admin-backend-query-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.1',
+    buildNumber: '20250923-005',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'parking-data-import-and-category-optimization',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.1.0',
+    buildNumber: '20250923-004',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'major-fallback-service-role-upgrade',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.0.9',
+    buildNumber: '20250923-003',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'service-role-fallback-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.0.8',
+    buildNumber: '20250923-002',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'recommendation-fallback-fix',
+    gitBranch: 'main'
+  },
+  {
+    version: 'WEN 1.0.7',
+    buildNumber: '20250923-001',
+    releaseDate: '2025-09-23',
+    buildTime: new Date().toISOString(),
+    environment: 'production',
+    gitCommit: 'recommendation-list-fix',
+    gitBranch: 'main'
+  },
   {
     version: 'WEN 1.0.6',
     buildNumber: '20250922-003',
@@ -84,6 +210,174 @@ export const VERSION_HISTORY: VersionInfo[] = [
 
 // 更新日誌
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    id: 'critical-fixes-and-spa-routing-20250930',
+    version: 'WEN 1.4.6',
+    date: '2025-09-30',
+    type: 'bugfix',
+    category: '系統修復',
+    title: '關鍵修復與SPA路由配置：解決跨類別幻覺與404問題',
+    description: '實施12個關鍵修復：跨類別幻覺防護、FAQ降權機制、MEDICAL vs FOOD競爭修正、PARKING優先級確保、CONFIRMATION安全網增強、統計查詢修復、前端SPA路由配置等。徹底解決藥局查詢推薦補習班問題，修復admin頁面刷新404錯誤',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'response-script-management-system-20250925',
+    version: 'WEN 1.4.0',
+    date: '2025-09-25',
+    type: 'feature',
+    category: '知識管理系統',
+    title: '回應腳本管理系統：完整知識庫工作流程',
+    description: '實現完整的「發現新用戶提問類型(合理意圖) → 寫出回應腳本 → 人類審核驗收(採納) → 納入高文文專用知識庫(存放到後臺訓練資料裡)」工作流程。包含7個核心數據表、回應腳本管理API、React管理後台、知識庫服務、Claude Chat V3整合等完整系統',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'voice-soul-engine-v2-architecture-20250923',
+    version: 'WEN 1.2.0',
+    date: '2025-09-23',
+    type: 'feature',
+    category: 'AI架構',
+    title: '語氣靈引擎 v2.0：五層架構設計實現',
+    description: '實現「資料優先 × 語氣誠實 × 靈格有溫度」核心哲學，建立五層架構：資料層(嚴格驗證)、語意理解層(意圖分類)、推薦策略層(多策略選擇)、語氣生成層(冷資料+熱模板)、回饋層(完整記錄)，徹底解決AI幻覺問題並提升互動溫度',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'ai-hallucination-emergency-fix-20250923',
+    version: 'WEN 1.1.8',
+    date: '2025-09-23',
+    type: 'hotfix',
+    category: 'AI功能',
+    title: 'AI幻覺緊急修復：強化空資料處理與防幻覺約束',
+    description: '緊急修復AI幻覺問題，強化空資料處理邏輯，新增3條具體防幻覺約束規則，防止AI編造「好客食堂」、「福源小館」、「阿村魯肉飯」等不存在的商家，確保推薦資訊真實性',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'universal-ai-hallucination-prevention-20250923',
+    version: 'WEN 1.1.7',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '通用 AI 幻覺防護機制：全面防護方案',
+    description: '建立通用 AI 幻覺防護原則，實施資料庫查詢防護機制、資料驗證機制、強化 System Prompt 防幻覺約束、錯誤處理透明化，確保推薦資訊真實性和準確性，提升系統可靠性',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'english-recommendation-optimization-20250923',
+    version: 'WEN 1.1.6',
+    date: '2025-09-23',
+    type: 'feature',
+    category: 'AI功能',
+    title: '英語推薦邏輯優化：首次只推薦肯塔基美語一家',
+    description: '優化英語學習查詢推薦邏輯，首次查詢只推薦肯塔基美語一家，除非用戶明確追問更多選擇。追問時會用關鍵字搜索商家資料庫提供更多教育培訓商家推薦，提升推薦精準度和用戶體驗',
+    author: 'C謀',
+    impact: 'medium',
+    status: 'completed'
+  },
+  {
+    id: 'ai-hallucination-fix-20250923',
+    version: 'WEN 1.1.5',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '修復AI幻覺問題：防止虛構商家推薦',
+    description: '修復高文文推薦虛構商家問題，強化System Prompt防幻覺機制，增強英語學習推薦邏輯，確保只推薦真實存在的商家資料，防止AI自行編造不存在的商家名稱和地址',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'admin-backend-query-fix-20250923',
+    version: 'WEN 1.1.4',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: '管理後台',
+    title: '修復管理後台對話記錄查詢問題',
+    description: '修復管理後台對話記錄無法顯示問題，修正資料庫欄位名稱不匹配（client_ip→user_ip, last_active→last_activity），移除不存在的欄位查詢，添加詳細錯誤日誌，確保管理後台顯示真實資料庫記錄',
+    author: 'C謀',
+    impact: 'high',
+    status: 'completed'
+  },
+  {
+    id: 'food-recommendation-logic-fix-20250923',
+    version: 'WEN 1.1.4',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '修復美食查詢推薦錯誤問題',
+    description: '修復美食查詢時錯誤推薦教育機構問題，添加美食查詢專門邏輯，修復 Fallback 機制過於激進問題，增強 System Prompt 防止 AI 幻覺，確保美食查詢只推薦餐飲美食類別',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'completed'
+  },
+  {
+    id: 'parking-data-import-and-category-optimization-20250923',
+    version: 'WEN 1.1.1',
+    date: '2025-09-23',
+    type: 'feature',
+    category: '資料管理',
+    title: '停車場資料匯入與商家分類優化',
+    description: '匯入高雄市鳳山區38筆停車場資料，建立兩層分類架構（8個大分類），修復餐飲美食分類統計問題，優化管理後台分類顯示，建立訓練資料同步機制',
+    author: 'C謀',
+    impact: 'high',
+    status: 'completed'
+  },
+  {
+    id: 'major-fallback-service-role-upgrade-20250923',
+    version: 'WEN 1.1.0',
+    date: '2025-09-23',
+    type: 'feature',
+    category: 'AI功能',
+    title: '重大升級：推薦系統完全穩定化與對話記錄優化',
+    description: '實現推薦清單永不為空機制，支援英語查詢和一般查詢的智能 fallback，全面採用 Service Role Key 避免 RLS 限制，對話記錄系統完全正常化，Edge Function 穩定性大幅提升',
+    author: 'C謀',
+    impact: 'critical',
+    status: 'deployed'
+  },
+  {
+    id: 'service-role-fallback-fix-20250923',
+    version: 'WEN 1.0.9',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '補強推薦系統穩定性與資料庫寫入',
+    description: '實施推薦清單永不為空 fallback 機制，改用 Service Role Key 進行資料庫寫入避免 RLS 限制，增強 Edge Function 穩定性，確保對話記錄正常保存',
+    author: 'C謀',
+    impact: 'high',
+    status: 'deployed'
+  },
+  {
+    id: 'recommendation-fallback-fix-20250923',
+    version: 'WEN 1.0.8',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '修復推薦清單 fallback 機制',
+    description: '修復 Edge Function 推薦清單為空問題，增強 fallback 機制確保肯塔基美語必入列，改善推薦系統穩定性',
+    author: 'C謀',
+    impact: 'high',
+    status: 'deployed'
+  },
+  {
+    id: 'recommendation-list-fix-20250923',
+    version: 'WEN 1.0.7',
+    date: '2025-09-23',
+    type: 'bugfix',
+    category: 'AI功能',
+    title: '修復推薦清單為空問題',
+    description: '修復 Edge Function 推薦清單為空的問題，增強商家查詢邏輯，確保肯塔基美語必入列，添加詳細日誌追蹤，改善推薦系統穩定性',
+    author: 'C謀',
+    impact: 'high',
+    status: 'deployed'
+  },
   {
     id: 'conversation-history-fix-20250922',
     version: 'WEN 1.0.6',
