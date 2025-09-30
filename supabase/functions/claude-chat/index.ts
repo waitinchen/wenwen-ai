@@ -8,6 +8,21 @@
  * 3. 模組化設計 - 驗證、排序、語氣生成分離
  * 4. 完善錯誤處理 - 結構化日誌和異常管理
  */ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// ===== 型別定義 =====
+export type Intent =
+  | 'ENGLISH_LEARNING' | 'FOOD' | 'PARKING' | 'SHOPPING' | 'BEAUTY' | 'MEDICAL' | 'ATTRACTION'
+  | 'GENERAL' | 'STATISTICS' | 'COVERAGE_STATS' | 'DIRECTIONS' | 'INTRO'
+  | 'VAGUE_CHAT' | 'CONFIRMATION' | 'OUT_OF_SCOPE' | 'GREETING' | 'SPECIFIC_ENTITY' | 'VAGUE_QUERY';
+
+type CatalogCategory = '教育培訓' | '餐飲美食' | '停車場' | '購物' | '美容美髮' | '醫療健康' | '景點觀光';
+
+export type CategoryTarget =
+  | { kind: 'catalog'; category: CatalogCategory }  // 需要查商家資料池
+  | { kind: 'system'; feature: 'statistics' | 'coverage_stats' | 'directions' } // 系統功能，不查庫
+  | { kind: 'chat'; subtype: 'intro' | 'vague_chat' | 'vague_query' | 'greeting' | 'confirmation' } // 純聊天
+  | { kind: 'control'; reason: 'out_of_scope' }    // 超出範圍 / 拒絕
+  | { kind: 'entity'; scope: 'brand' | 'store' };  // 指名實體，通常需二次判斷再路由
+
 // ===== 配置常數 =====
 const APP_VERSION = Deno.env.get('APP_VERSION') || 'WEN 1.4.6';
 const CONFIG = {
@@ -189,7 +204,53 @@ const CONFIG = {
     }
   };
 
-// 意圖到資料庫中文分類名稱的穩定對照
+// ===== 意圖路由表（型別安全版本）=====
+export const INTENT_ROUTING_TABLE: Record<Intent, CategoryTarget> = {
+  // 會打 DB 的 Catalog 意圖
+  ENGLISH_LEARNING: { kind: 'catalog', category: '教育培訓' },
+  FOOD:             { kind: 'catalog', category: '餐飲美食' },
+  PARKING:          { kind: 'catalog', category: '停車場' },
+  SHOPPING:         { kind: 'catalog', category: '購物' },
+  BEAUTY:           { kind: 'catalog', category: '美容美髮' },
+  MEDICAL:          { kind: 'catalog', category: '醫療健康' },
+  ATTRACTION:       { kind: 'catalog', category: '景點觀光' },
+
+  // 系統功能（不查庫，走專用產生器）
+  STATISTICS:       { kind: 'system', feature: 'statistics' },      // 舊路徑（可保留相容）
+  COVERAGE_STATS:   { kind: 'system', feature: 'coverage_stats' },  // 新統計路徑
+  DIRECTIONS:       { kind: 'system', feature: 'directions' },
+
+  // 純聊天流程
+  INTRO:            { kind: 'chat', subtype: 'intro' },
+  VAGUE_CHAT:       { kind: 'chat', subtype: 'vague_chat' },
+  VAGUE_QUERY:      { kind: 'chat', subtype: 'vague_query' },
+  GREETING:         { kind: 'chat', subtype: 'greeting' },
+  CONFIRMATION:     { kind: 'chat', subtype: 'confirmation' },
+
+  // 控制/拒絕
+  OUT_OF_SCOPE:     { kind: 'control', reason: 'out_of_scope' },
+
+  // 指名實體（需再判斷品牌/店名 → 轉 Catalog 類別）
+  SPECIFIC_ENTITY:  { kind: 'entity', scope: 'brand' },
+  GENERAL:          { kind: 'entity', scope: 'store' }  // 一般查詢，可能包含實體
+};
+
+// ===== 小工具：判斷分流 =====
+export const isCatalogIntent = (intent: Intent): boolean =>
+  INTENT_ROUTING_TABLE[intent]?.kind === 'catalog';
+
+export const getCatalogCategory = (intent: Intent): CatalogCategory | null =>
+  isCatalogIntent(intent) ? (INTENT_ROUTING_TABLE[intent] as { kind:'catalog'; category: CatalogCategory }).category : null;
+
+// ===== MEDICAL 子分類（搭配 catalog: '醫療健康' 使用）=====
+export const SUBCATEGORY_BY_MEDICAL: Record<string, string[]> = {
+  '藥局': ['藥局', '藥房', '處方', '處方藥'],
+  '藥妝': ['藥妝', '美妝', '保養品', '化妝品', '保健'],
+  '診所': ['診所', '門診', '內科', '小兒科', '皮膚科', '骨科', '疫苗', '健檢'],
+  '牙醫': ['牙醫', '牙科', '洗牙', '矯正', '植牙', '美白']
+};
+
+// ===== 向後相容：舊的 CATEGORY_BY_INTENT =====
 const CATEGORY_BY_INTENT = {
   ENGLISH_LEARNING: '教育培訓',
   FOOD: '餐飲美食',
@@ -1121,18 +1182,11 @@ const MEDICAL_TAG_MAPPING = {
       const medicalMatches = medicalKeywords.filter((keyword)=>messageLower.includes(keyword));
       
       if (medicalMatches.length > 0) {
-        // MEDICAL 子分類偵測
-        const medicalSubMap = [
-          { sub: '藥局',  keys: ['藥局','藥房','處方'] },
-          { sub: '藥妝',  keys: ['藥妝','美妝','保養品','化妝品'] },
-          { sub: '診所',  keys: ['診所','門診','內科','小兒科','皮膚科','骨科'] },
-          { sub: '牙醫',  keys: ['牙醫','牙科','洗牙','矯正','植牙'] },
-        ];
-
+        // MEDICAL 子分類偵測（使用新的路由系統）
         let medicalSub: string | undefined;
-        for (const m of medicalSubMap) {
-          if (m.keys.some(k => messageLower.includes(k))) { 
-            medicalSub = m.sub; 
+        for (const [subcategory, keywords] of Object.entries(SUBCATEGORY_BY_MEDICAL)) {
+          if (keywords.some(k => messageLower.includes(k))) { 
+            medicalSub = subcategory; 
             break; 
           }
         }
@@ -1893,8 +1947,45 @@ const MEDICAL_TAG_MAPPING = {
     }
 
     /**
-     * 根據意圖獲取商家資料
+     * 根據意圖獲取商家資料（使用新的路由系統）
      */ async fetchStoresByIntent(intent, message, subcategory) {
+      console.log(`[推薦層] 根據意圖 ${intent} 查詢商家，子分類: ${subcategory}`);
+      
+      // 使用新的路由系統
+      const target = INTENT_ROUTING_TABLE[intent];
+      if (!target) {
+        console.log(`[推薦層] 未知意圖: ${intent}`);
+        return [];
+      }
+      
+      switch (target.kind) {
+        case 'catalog': {
+          return this.fetchCatalogStores(intent, target.category, message, subcategory);
+        }
+        case 'system': {
+          return this.fetchSystemStores(intent, target.feature);
+        }
+        case 'chat': {
+          return []; // 純聊天不需要查商家
+        }
+        case 'control': {
+          return []; // 控制/拒絕不需要查商家
+        }
+        case 'entity': {
+          return this.fetchEntityStores(intent, message, subcategory);
+        }
+        default: {
+          console.log(`[推薦層] 未知路由類型: ${target.kind}`);
+          return [];
+        }
+      }
+    }
+    
+    /**
+     * 分離的 catalog 查詢方法
+     */ async fetchCatalogStores(intent, category, message, subcategory) {
+      console.log(`[推薦層] 查詢 Catalog 商家: ${intent} -> ${category}`);
+      
       switch(intent){
         case 'ENGLISH_LEARNING':
           // 英語學習：優先肯塔基美語
@@ -1952,23 +2043,44 @@ const MEDICAL_TAG_MAPPING = {
           return beautyTagMatches.length > 0 ? beautyTagMatches : beautyStores;
         case 'MEDICAL':
           const medicalStores = await this.dataLayer.getEligibleStores('MEDICAL', '醫療健康');
-          // 若 subcategory 帶的是品牌名，做二次過濾
+
+          // (A) 先做品牌名過濾（已存在）
           let filteredMedicalStores = medicalStores;
-          if (subcategory) {
+          if (subcategory && ['屈臣氏','康是美','大樹','杏一','丁丁'].some(b => subcategory.toLowerCase().includes(b.toLowerCase()))) {
             const brand = subcategory.toLowerCase();
-            filteredMedicalStores = medicalStores.filter(s => 
+            filteredMedicalStores = medicalStores.filter(s =>
               (s.store_name || '').toLowerCase().includes(brand)
             );
           }
-          
-          // 使用智能醫療標籤匹配
+
+          // (B) 子分類過濾（新增）
+          const subToTags: Record<string, string[]> = {
+            '藥局': ['藥局','藥房','處方藥'],
+            '藥妝': ['藥妝','美妝','保養品','化妝品'],
+            '診所': ['診所','醫療','門診','健檢','疫苗'],
+            '牙醫': ['牙醫','牙科','洗牙','矯正','植牙']
+          };
+
+          if (subcategory && subToTags[subcategory]) {
+            const need = subToTags[subcategory].map(t => t.toLowerCase());
+            filteredMedicalStores = filteredMedicalStores.filter(s => {
+              const fobj = getFeaturesObj(s.features);
+              const sec  = String(fobj.secondary_category || '').toLowerCase();
+              const tags = (Array.isArray(fobj.tags) ? fobj.tags : []).map(String).map(x=>x.toLowerCase());
+              const name = (s.store_name || '').toLowerCase();
+              const hay  = new Set([sec, ...tags, name]);
+              return need.some(n => [...hay].some(v => v.includes(n)));
+            });
+          }
+
+          // (C) 智能醫療標籤匹配（保留）
           const medicalTagMatches = this.smartMedicalTagMatching(filteredMedicalStores, message, intent);
           if (medicalTagMatches.length > 0) {
             console.log(`[推薦層] 智能醫療標籤匹配找到 ${medicalTagMatches.length} 個商家`);
             return medicalTagMatches;
           }
-          
-          // 如果智能匹配沒有結果，使用一般標籤匹配
+
+          // (D) 一般標籤匹配（保留）
           const generalTagMatches = this.matchStoresByTags(filteredMedicalStores, message, intent);
           return generalTagMatches.length > 0 ? generalTagMatches : filteredMedicalStores;
         case 'PARKING':
@@ -2001,6 +2113,46 @@ const MEDICAL_TAG_MAPPING = {
             CATEGORY_BY_INTENT[intent] || undefined
           );
       }
+    }
+    
+    /**
+     * 系統功能查詢
+     */ async fetchSystemStores(intent, feature) {
+      console.log(`[推薦層] 查詢系統功能: ${intent} -> ${feature}`);
+      
+      switch (feature) {
+        case 'statistics':
+        case 'coverage_stats': {
+          const stats = await this.dataLayer.getStats();
+          return stats ? [{ stats }] : [];
+        }
+        case 'directions': {
+          return []; // 不查表，交給語氣層輸出模板
+        }
+        default: {
+          console.log(`[推薦層] 未知系統功能: ${feature}`);
+          return [];
+        }
+      }
+    }
+    
+    /**
+     * 實體查詢（品牌/店名）
+     */ async fetchEntityStores(intent, message, subcategory) {
+      console.log(`[推薦層] 查詢實體: ${intent}, 子分類: ${subcategory}`);
+      
+      // 先做品牌偵測
+      const brandProbe = this.toneLayer?.detectBrandSpecificQuery?.(message);
+      if (brandProbe?.isBrandSpecific) {
+        // 轉到對應的 catalog 查詢
+        return this.fetchCatalogStores(brandProbe.category, getCatalogCategory(brandProbe.category) || '', message, brandProbe.brand);
+      }
+      
+      // 一般實體查詢，使用舊邏輯
+      return await this.dataLayer.getEligibleStores(
+        intent,
+        CATEGORY_BY_INTENT[intent] || undefined
+      );
     }
     
     /**
@@ -2545,7 +2697,7 @@ ${version}`;
         case 'BEAUTY':
           return this.generateServiceResponseContentOnly(stores, '美容美髮');
         case 'MEDICAL':
-          return this.generateServiceResponseContentOnly(stores, '醫療健康');
+          return this.generateServiceResponseContentOnly(stores, '醫療健康', logic?.subcategory);
         case 'PARKING':
           return this.generateParkingResponse(stores);
         case 'STATISTICS':
@@ -2650,10 +2802,23 @@ ${lineStr}
     /**
      * 一般服務回應（僅內容，不包含開頭語）
      */
-    generateServiceResponseContentOnly(stores, serviceType) {
+    generateServiceResponseContentOnly(stores, serviceType, subcategory?: string) {
       if (stores.length === 0) {
         return FallbackService.generateContextualFallback('GENERAL');
       }
+
+      // 對 MEDICAL 提示子分類（若有）
+      if (serviceType === '醫療健康' && subcategory) {
+        const lead = `以下為 **${subcategory}** 相關選擇：\n\n`;
+        return lead + this.buildStoreListResponseContentOnly(
+          stores.map(s => ({
+            ...s,
+            // 視覺標籤：藥局/藥妝/診所/牙醫
+            store_name: s.store_name ? `${s.store_name}（${subcategory}）` : s.store_name
+          }))
+        );
+      }
+
       return this.buildStoreListResponseContentOnly(stores);
     }
     
@@ -3088,6 +3253,7 @@ ${lineStr}
             })),
           recommendation_logic: {
             ...recommendationResult.logic,
+            subcategory: intentResult.subcategory, // 添加子分類信息
             processing_time_ms: processingTime,
             fallback_used: recommendationResult.needsFallback,
             validation_layer_enabled: true,

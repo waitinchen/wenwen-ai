@@ -80,6 +80,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
     owner: '',
     role: '',
     category: '',
+    subcategory: '',
     address: '',
     phone: '',
     business_hours: '',
@@ -105,6 +106,65 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
     '服飾配件',
     '其他'
   ]
+
+  // 子分類選項
+  const subcategories = {
+    '餐飲美食': [
+      '中式料理',
+      '日式料理', 
+      '韓式料理',
+      '西式料理',
+      '泰式料理',
+      '義式料理',
+      '咖啡廳',
+      '早餐店',
+      '火鍋',
+      '其他餐飲'
+    ],
+    '購物消費': [
+      '超市',
+      '便利商店',
+      '服飾店',
+      '電器行',
+      '書店',
+      '百貨公司',
+      '其他購物'
+    ],
+    '生活服務': [
+      '美容美髮',
+      '修繕服務',
+      '健身中心',
+      '其他服務'
+    ],
+    '醫療保健': [
+      '醫院',
+      '診所',
+      '藥局',
+      '其他醫療'
+    ],
+    '教育培訓': [
+      '補習班',
+      '學校',
+      '圖書館',
+      '文化中心',
+      '其他教育'
+    ],
+    '休閒娛樂': [
+      '公園',
+      '觀光景點',
+      '休閒中心',
+      '夜市',
+      '其他休閒'
+    ],
+    '住宿旅遊': [
+      '商旅',
+      '民宿'
+    ],
+    '其他': [
+      '寺廟',
+      '其他'
+    ]
+  }
 
   // 角色選項
   const roleOptions = [
@@ -165,8 +225,24 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
       setError('')
       console.log('Starting save process...')
       
+      // 處理 features JSON，包含子分類
+      let featuresObj: any = {}
+      try {
+        if (formData.features) {
+          featuresObj = JSON.parse(formData.features)
+        }
+      } catch (e) {
+        // 如果解析失敗，使用空物件
+      }
+      
+      // 添加子分類到 features
+      if (formData.subcategory) {
+        featuresObj.secondary_category = formData.subcategory
+      }
+      
       const storeData = {
         ...formData,
+        features: JSON.stringify(featuresObj),
         created_at: editingItem ? editingItem.created_at : new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -203,11 +279,24 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
 
   const handleEdit = (store: Store) => {
     setEditingItem(store)
+    
+    // 從 features JSON 中提取子分類
+    let subcategory = ''
+    try {
+      if (store.features) {
+        const featuresObj = JSON.parse(store.features)
+        subcategory = featuresObj.secondary_category || ''
+      }
+    } catch (e) {
+      // 忽略 JSON 解析錯誤
+    }
+    
     setFormData({
       store_name: store.store_name,
       owner: store.owner || '',
       role: store.role || '',
       category: store.category || '',
+      subcategory: subcategory,
       address: store.address || '',
       phone: store.phone || '',
       business_hours: store.business_hours || '',
@@ -250,6 +339,7 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
       owner: '',
       role: '',
       category: '',
+      subcategory: '',
       address: '',
       phone: '',
       business_hours: '',
@@ -567,12 +657,29 @@ const StoreManagement = ({ className }: StoreManagementProps) => {
                 </label>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value, subcategory: '' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06C755] focus:border-transparent"
                 >
                   <option value="">選擇分類</option>
                   {defaultCategories.map(category => (
                     <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  子分類
+                </label>
+                <select
+                  value={formData.subcategory}
+                  onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#06C755] focus:border-transparent"
+                  disabled={!formData.category}
+                >
+                  <option value="">選擇子分類</option>
+                  {formData.category && subcategories[formData.category]?.map(subcategory => (
+                    <option key={subcategory} value={subcategory}>{subcategory}</option>
                   ))}
                 </select>
               </div>

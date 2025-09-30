@@ -339,32 +339,23 @@ export async function analyticsRequest(action: string, dateRange?: any, filters?
 // 常用問題管理
 export async function getQuickQuestions(): Promise<QuickQuestion[]> {
   try {
-    // 首先嘗試使用 Supabase Edge Function
-    const token = localStorage.getItem('admin_token')
-    if (!token) {
-      throw new Error('未登入或登入已過期')
-    }
-
-    const { data, error } = await supabase.functions.invoke('admin-management', {
-      body: {
-        action: 'list',
-        table: 'quick_questions',
-        filters: { orderBy: 'display_order', orderDirection: 'asc' },
-        token // 傳遞認證令牌
-      }
-    })
+    // 快速問題是公開資料，不需要認證
+    // 直接使用 Supabase 客戶端查詢
+    const { data, error } = await supabase
+      .from('quick_questions')
+      .select('*')
+      .order('display_order', { ascending: true })
 
     if (error) {
-      console.warn('Edge Function failed, using mock API:', error.message)
-      // 如果 Edge Function 失敗，使用模擬 API
-      const { mockGetQuickQuestions } = await import('./mockQuickQuestions')
-      return await mockGetQuickQuestions()
+      console.error('Failed to fetch quick questions from database:', error)
+      throw error
     }
-    
-    return data.data as QuickQuestion[]
+
+    console.log('✓ 成功從資料庫獲取快速問題:', data?.length || 0, '個')
+    return data || []
   } catch (error) {
-    console.warn('Quick questions error, using mock API:', error)
-    // 如果發生錯誤，使用模擬 API
+    console.warn('Failed to fetch quick questions via Supabase, using mock data:', error)
+    // 如果資料庫失敗，使用模擬數據
     const { mockGetQuickQuestions } = await import('./mockQuickQuestions')
     return await mockGetQuickQuestions()
   }
@@ -660,18 +651,27 @@ export async function getBlockedQuestionsStats(dateRange: any) {
 
 export async function getStores() {
   try {
-    // 使用管理員權限獲取商店列表
-    const data = await adminRequest('list', 'stores', null, null, { orderBy: 'store_name' })
-    return data
+    // 商家列表是公開數據，不需要認證
+    // 直接使用 Supabase 客戶端查詢
+    const { data, error } = await supabase
+      .from('stores')
+      .select('*')
+      .order('store_name', { ascending: true })
+
+    if (error) {
+      console.error('Failed to fetch stores from database:', error)
+      throw error
+    }
+
+    console.log('✓ 成功從資料庫獲取商家:', data?.length || 0, '家')
+    return data || []
   } catch (error) {
-    console.warn('Failed to fetch stores via admin API, using mock data:', error)
+    console.warn('Failed to fetch stores via Supabase, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { getAllMockStores } = await import('./mockStores')
     const mockData = getAllMockStores()
     console.log('=== getStores API 調試 ===')
     console.log('Mock data length:', mockData.length)
-    console.log('Mock data:', mockData)
-    console.log('Partner stores in mock data:', mockData.filter(store => store.is_partner_store))
     console.log('=== getStores API 調試結束 ===')
     return mockData
   }

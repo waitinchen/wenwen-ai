@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CURRENT_VERSION } from '@/config/version'
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void
@@ -61,7 +62,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             onInput={adjustHeight}
-            placeholder="輸入您的問題... 按 Enter 發送，Shift + Enter 換行"
+            placeholder="輸入您的問題..."
             disabled={disabled}
             rows={1}
             className={cn(
@@ -89,6 +90,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <Send size={20} className="ml-0.5" />
         </button>
       </form>
+      
+      {/* 版本號顯示 */}
+      <div className="flex justify-center mt-2">
+        <span className="text-xs text-gray-400 font-mono">
+          {CURRENT_VERSION.version}
+        </span>
+      </div>
 
     </div>
   )

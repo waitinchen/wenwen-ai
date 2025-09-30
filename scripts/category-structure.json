@@ -1,0 +1,395 @@
+{
+  "mainCategories": {
+    "餐飲美食": {
+      "id": "food",
+      "description": "餐廳、咖啡廳、小吃等餐飲相關",
+      "subcategories": [
+        {
+          "id": "chinese",
+          "name": "中式料理",
+          "keywords": [
+            "中式",
+            "中餐",
+            "台菜",
+            "台式"
+          ]
+        },
+        {
+          "id": "japanese",
+          "name": "日式料理",
+          "keywords": [
+            "日式",
+            "日料",
+            "壽司",
+            "拉麵",
+            "丼飯"
+          ]
+        },
+        {
+          "id": "korean",
+          "name": "韓式料理",
+          "keywords": [
+            "韓式",
+            "韓料",
+            "韓食",
+            "韓燒"
+          ]
+        },
+        {
+          "id": "western",
+          "name": "西式料理",
+          "keywords": [
+            "西式",
+            "西餐",
+            "義式",
+            "義大利",
+            "美式"
+          ]
+        },
+        {
+          "id": "cafe",
+          "name": "咖啡廳",
+          "keywords": [
+            "咖啡",
+            "咖啡廳",
+            "咖啡店"
+          ]
+        },
+        {
+          "id": "restaurant",
+          "name": "餐廳",
+          "keywords": [
+            "餐廳",
+            "親子餐廳",
+            "茶餐廳",
+            "餐酒館"
+          ]
+        },
+        {
+          "id": "breakfast",
+          "name": "早餐店",
+          "keywords": [
+            "早餐",
+            "早午餐",
+            "brunch"
+          ]
+        },
+        {
+          "id": "hotpot",
+          "name": "火鍋",
+          "keywords": [
+            "火鍋",
+            "涮涮鍋"
+          ]
+        },
+        {
+          "id": "other_food",
+          "name": "其他餐飲",
+          "keywords": [
+            "美食",
+            "餐飲",
+            "小吃"
+          ]
+        }
+      ]
+    },
+    "購物消費": {
+      "id": "shopping",
+      "description": "商店、超市、服飾等購物相關",
+      "subcategories": [
+        {
+          "id": "supermarket",
+          "name": "超市",
+          "keywords": [
+            "超市",
+            "全聯",
+            "家樂福"
+          ]
+        },
+        {
+          "id": "convenience",
+          "name": "便利商店",
+          "keywords": [
+            "便利商店",
+            "7-11",
+            "全家"
+          ]
+        },
+        {
+          "id": "clothing",
+          "name": "服飾店",
+          "keywords": [
+            "服飾",
+            "衣服",
+            "服裝"
+          ]
+        },
+        {
+          "id": "electronics",
+          "name": "電器行",
+          "keywords": [
+            "電器",
+            "3C",
+            "電子"
+          ]
+        },
+        {
+          "id": "bookstore",
+          "name": "書店",
+          "keywords": [
+            "書店",
+            "文具",
+            "圖書"
+          ]
+        },
+        {
+          "id": "department",
+          "name": "百貨公司",
+          "keywords": [
+            "百貨",
+            "商場"
+          ]
+        },
+        {
+          "id": "other_shopping",
+          "name": "其他購物",
+          "keywords": [
+            "購物",
+            "商店"
+          ]
+        }
+      ]
+    },
+    "生活服務": {
+      "id": "services",
+      "description": "美容、修繕、洗衣等生活服務",
+      "subcategories": [
+        {
+          "id": "beauty",
+          "name": "美容美髮",
+          "keywords": [
+            "美髮",
+            "美容",
+            "沙龍"
+          ]
+        },
+        {
+          "id": "repair",
+          "name": "修繕服務",
+          "keywords": [
+            "修車",
+            "修繕",
+            "保養"
+          ]
+        },
+        {
+          "id": "fitness",
+          "name": "健身中心",
+          "keywords": [
+            "健身",
+            "健身房",
+            "運動"
+          ]
+        },
+        {
+          "id": "other_services",
+          "name": "其他服務",
+          "keywords": [
+            "服務",
+            "工作室"
+          ]
+        }
+      ]
+    },
+    "醫療保健": {
+      "id": "medical",
+      "description": "醫院、診所、藥局等醫療相關",
+      "subcategories": [
+        {
+          "id": "hospital",
+          "name": "醫院",
+          "keywords": [
+            "醫院",
+            "綜合醫院"
+          ]
+        },
+        {
+          "id": "clinic",
+          "name": "診所",
+          "keywords": [
+            "診所",
+            "牙科",
+            "眼科",
+            "耳鼻喉科",
+            "婦產科",
+            "中醫",
+            "西醫",
+            "泌尿科",
+            "復健科"
+          ]
+        },
+        {
+          "id": "pharmacy",
+          "name": "藥局",
+          "keywords": [
+            "藥局",
+            "藥房"
+          ]
+        },
+        {
+          "id": "other_medical",
+          "name": "其他醫療",
+          "keywords": [
+            "醫療",
+            "健康"
+          ]
+        }
+      ]
+    },
+    "教育培訓": {
+      "id": "education",
+      "description": "補習班、學校、圖書館等教育相關",
+      "subcategories": [
+        {
+          "id": "cram_school",
+          "name": "補習班",
+          "keywords": [
+            "補習班",
+            "美語",
+            "英語",
+            "教育培訓"
+          ]
+        },
+        {
+          "id": "school",
+          "name": "學校",
+          "keywords": [
+            "學校",
+            "幼兒園"
+          ]
+        },
+        {
+          "id": "library",
+          "name": "圖書館",
+          "keywords": [
+            "圖書館",
+            "圖書"
+          ]
+        },
+        {
+          "id": "cultural",
+          "name": "文化中心",
+          "keywords": [
+            "文化中心",
+            "藝術"
+          ]
+        },
+        {
+          "id": "other_education",
+          "name": "其他教育",
+          "keywords": [
+            "教育",
+            "學習"
+          ]
+        }
+      ]
+    },
+    "休閒娛樂": {
+      "id": "entertainment",
+      "description": "公園、景點、休閒中心等娛樂相關",
+      "subcategories": [
+        {
+          "id": "park",
+          "name": "公園",
+          "keywords": [
+            "公園",
+            "運動園區"
+          ]
+        },
+        {
+          "id": "attraction",
+          "name": "觀光景點",
+          "keywords": [
+            "觀光",
+            "景點",
+            "歷史建築"
+          ]
+        },
+        {
+          "id": "leisure",
+          "name": "休閒中心",
+          "keywords": [
+            "休閒",
+            "娛樂"
+          ]
+        },
+        {
+          "id": "nightmarket",
+          "name": "夜市",
+          "keywords": [
+            "夜市"
+          ]
+        },
+        {
+          "id": "other_entertainment",
+          "name": "其他休閒",
+          "keywords": [
+            "休閒",
+            "娛樂"
+          ]
+        }
+      ]
+    },
+    "住宿旅遊": {
+      "id": "accommodation",
+      "description": "旅館、民宿等住宿相關",
+      "subcategories": [
+        {
+          "id": "hotel",
+          "name": "商旅",
+          "keywords": [
+            "商旅",
+            "旅館",
+            "飯店"
+          ]
+        },
+        {
+          "id": "homestay",
+          "name": "民宿",
+          "keywords": [
+            "民宿"
+          ]
+        },
+        {
+          "id": "other_accommodation",
+          "name": "其他住宿",
+          "keywords": [
+            "住宿"
+          ]
+        }
+      ]
+    },
+    "其他": {
+      "id": "other",
+      "description": "其他未分類的商家",
+      "subcategories": [
+        {
+          "id": "temple",
+          "name": "寺廟",
+          "keywords": [
+            "寺廟",
+            "宮廟"
+          ]
+        },
+        {
+          "id": "other",
+          "name": "其他",
+          "keywords": [
+            "其他",
+            "未分類"
+          ]
+        }
+      ]
+    }
+  }
+}

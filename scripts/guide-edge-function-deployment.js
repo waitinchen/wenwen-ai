@@ -1,0 +1,75 @@
+/**
+ * Edge Function 部署指導腳本
+ * 引導用戶部署最新的 Edge Function 代碼
+ */
+
+console.log('🚀 Edge Function 部署指導')
+console.log('=' .repeat(50))
+
+console.log('\n📋 第二步：部署最新的 Edge Function 代碼')
+console.log('請按照以下步驟操作：')
+console.log('')
+console.log('1. 開啟 Supabase Dashboard')
+console.log('   👉 https://supabase.com/dashboard')
+console.log('')
+console.log('2. 進入您的專案')
+console.log('   👉 選擇 "wenwen-ai" 專案')
+console.log('')
+console.log('3. 進入 Edge Functions 頁面')
+console.log('   👉 左側選單 → Edge Functions')
+console.log('')
+console.log('4. 找到 claude-chat 函數')
+console.log('   👉 點擊 claude-chat 函數')
+console.log('')
+console.log('5. 部署新代碼')
+console.log('   👉 點擊 "Deploy" 按鈕')
+console.log('   👉 或使用 "Redeploy" 重新部署')
+console.log('')
+console.log('6. 等待部署完成')
+console.log('   👉 看到 "Deployed" 狀態')
+console.log('   👉 檢查是否有錯誤訊息')
+console.log('')
+
+console.log('📊 預期結果：')
+console.log('- Edge Function 狀態顯示為 "Deployed"')
+console.log('- 沒有錯誤訊息')
+console.log('- 函數可以正常調用')
+console.log('')
+
+console.log('✅ 部署成功標誌：')
+console.log('- 狀態顯示 "Deployed"')
+console.log('- 沒有紅色錯誤訊息')
+console.log('- 可以在 Functions 頁面看到更新時間')
+console.log('')
+
+console.log('🔍 驗證部署：')
+console.log('1. 檢查函數狀態：')
+console.log('   - 應該顯示 "Deployed" 狀態')
+console.log('   - 檢查最後更新時間')
+console.log('')
+console.log('2. 檢查日誌：')
+console.log('   - 點擊 "Logs" 標籤')
+console.log('   - 確認沒有語法錯誤')
+console.log('   - 檢查是否有運行時錯誤')
+console.log('')
+
+console.log('⚠️  如果遇到錯誤：')
+console.log('- 檢查代碼語法是否正確')
+console.log('- 確認所有依賴都已安裝')
+console.log('- 檢查環境變數設定')
+console.log('- 查看詳細錯誤訊息')
+console.log('')
+
+console.log('📞 需要幫助時：')
+console.log('- 截圖錯誤訊息')
+console.log('- 提供具體的錯誤內容')
+console.log('- 我會協助您解決問題')
+console.log('')
+
+console.log('⏭️  完成後請告訴我：')
+console.log('- "Edge Function 部署完成" 或')
+console.log('- 提供任何錯誤訊息')
+console.log('')
+
+// 等待用戶回應
+console.log('請執行上述步驟，然後告訴我結果...')

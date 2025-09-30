@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Loader2, MessageCircle, RefreshCw, Settings, User, Brain } from 'lucide-react'
+import { Loader2, MessageCircle, RefreshCw, Settings, User } from 'lucide-react'
+// import { Brain } from 'lucide-react' // 暫時註釋以避免建置錯誤
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { sendMessage, type ChatResponse } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { useUserAuth } from '@/contexts/UserAuthContext'
-import { createMemoryProcessor } from '@/lib/memoryProcessor'
 import Message from '@/components/Message'
 import MessageInput from '@/components/MessageInput'
 import QuickReply from '@/components/QuickReply'
@@ -26,24 +26,11 @@ const ChatInterface: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [userDisplayName, setUserDisplayName] = useState('訪客')
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | undefined>()
-  const [memoryProcessor, setMemoryProcessor] = useState<any>(null)
-  const [memoryStats, setMemoryStats] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   // 使用LINE用戶認證Context
   const { lineUser, isLoading: userLoading, error: userError, clearUser } = useUserAuth()
 
-  // 初始化記憶處理器
-  useEffect(() => {
-    const userId = lineUser?.line_uid || `guest-${Date.now()}`
-    const processor = createMemoryProcessor(userId, sessionId)
-    setMemoryProcessor(processor)
-    
-    // 載入記憶統計
-    processor.getMemoryStats().then(stats => {
-      setMemoryStats(stats)
-    }).catch(console.error)
-  }, [lineUser?.line_uid, sessionId])
 
   // 常用問題推薦 - 從資料庫加載
   const [quickSuggestions, setQuickSuggestions] = useState<string[]>([]);
@@ -137,15 +124,10 @@ const ChatInterface: React.FC = () => {
     setError(null)
 
     try {
-      // 檢索相關記憶用於上下文注入
-      let memoryContext = ''
-      if (memoryProcessor) {
-        memoryContext = await memoryProcessor.retrieveRelevantMemories(content)
-      }
 
-      // 使用 Edge Function API（帶記憶上下文和用戶元資料）
+      // 使用 Edge Function API（帶用戶元資料）
       const response: ChatResponse = await sendMessage(
-        content + memoryContext,
+        content,
         sessionId,
         lineUser?.line_uid,
         {
@@ -170,15 +152,6 @@ const ChatInterface: React.FC = () => {
 
       setMessages(prev => [...prev, botMessage])
 
-      // 處理並存儲記憶（異步執行，不阻擋對話）
-      if (memoryProcessor) {
-        memoryProcessor.processAndStore(content, response.response).then(() => {
-          // 更新記憶統計
-          memoryProcessor.getMemoryStats().then(stats => {
-            setMemoryStats(stats)
-          }).catch(console.error)
-        }).catch(console.error)
-      }
     } catch (error) {
       console.error('Failed to send message:', error)
       setError('很抱歉，目前系統繁忙，請稍後再試或刷新頁面。')
@@ -240,13 +213,6 @@ const ChatInterface: React.FC = () => {
               </div>
             )}
 
-            {/* 記憶統計顯示 */}
-            {memoryStats && memoryStats.totalMemories > 0 && (
-              <div className="flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1 mr-1" title="記憶數量">
-                <Brain size={14} className="text-white" />
-                <span className="text-xs text-white">{memoryStats.activeMemories}</span>
-              </div>
-            )}
             
             <button
               onClick={handleReset}

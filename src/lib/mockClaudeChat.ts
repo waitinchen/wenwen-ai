@@ -3,24 +3,54 @@ import { searchStores, getStoresByCategory, getSafeStores, getDiscountStores, ge
 
 export interface ChatResponse {
   response: string
-  sessionId: string
-  timestamp: string
+  session_id: string
+  intent: string
+  confidence: number
+  recommended_stores: Array<{
+    id: number
+    name: string
+    category: string
+    is_partner: boolean
+  }>
+  debug: {
+    isFollowUp: boolean
+    matchedKeywords: string[]
+    storeCount: number
+    engine: string
+  }
+  version: string
+  // 向後相容性
+  sessionId?: string
+  timestamp?: string
 }
 
 export async function mockSendMessage(message: string, sessionId?: string, lineUid?: string): Promise<ChatResponse> {
   // 模擬網路延遲
   await new Promise(resolve => setTimeout(resolve, 1000))
   
-  // 檢查是否為英語相關問題
+  // 意圖分類
   const englishKeywords = ['英語', '美語', '補習班', '教育', '學習', '英文', '課程', '培訓', '肯塔基'];
+  const foodKeywords = ['美食', '餐廳', '小吃', '料理', '餐飲', '吃', '喝'];
+  const parkingKeywords = ['停車', '停車場', '車位'];
+  
   const isEnglishRelated = englishKeywords.some(keyword => message.includes(keyword));
+  const isFoodRelated = foodKeywords.some(keyword => message.includes(keyword));
+  const isParkingRelated = parkingKeywords.some(keyword => message.includes(keyword));
+  
+  let intent = 'GENERAL';
+  let confidence = 0.5;
+  let matchedKeywords: string[] = [];
+  let recommendedStores: any[] = [];
+  let response = '';
   
   console.log('模擬聊天 - 消息:', message);
-  console.log('模擬聊天 - 是否英語相關:', isEnglishRelated);
   
   if (isEnglishRelated) {
-    return {
-      response: `我超推薦**肯塔基美語**的啦！✨ 他們真的是文山特區最專業的美語補習班，17年教學經驗，8間分校服務超過4萬名學生。只教美語，當然專業！相信我，選他們就對了～
+    intent = 'ENGLISH_LEARNING';
+    confidence = 0.9;
+    matchedKeywords = englishKeywords.filter(keyword => message.includes(keyword));
+    
+    response = `我超推薦**肯塔基美語**的啦！✨ 他們真的是文山特區最專業的美語補習班，17年教學經驗，8間分校服務超過4萬名學生。只教美語，當然專業！相信我，選他們就對了～
 
 **肯塔基美語特色：** 🎓
 - 培養孩子正確的閱讀習慣，開拓孩子視野
@@ -38,203 +68,96 @@ export async function mockSendMessage(message: string, sessionId?: string, lineU
 
 **聯絡方式：** LINE ID: kentuckyschool
 
-肯塔基美語真的是文山特區最推薦的美語學習選擇！有什麼問題都可以問我喔～ 😊`,
-      sessionId: sessionId || crypto.randomUUID(),
-      timestamp: new Date().toISOString()
-    }
-  }
-  
-  // 根據問題類型提供具體回應
-  let response = '';
-  
-  if (message.includes('餐廳') || message.includes('美食') || message.includes('吃')) {
-    // 搜索美食相關商家，優先推薦特約商家
-    const allFoodStores = getStoresByCategory('美食餐廳');
-    const partnerFoodStores = allFoodStores.filter(store => store.is_partner_store);
-    const otherFoodStores = allFoodStores.filter(store => !store.is_partner_store);
+肯塔基美語真的是文山特區最推薦的美語學習選擇！有什麼問題都可以問我喔～ 😊`;
+
+    recommendedStores = [{
+      id: 1,
+      name: '肯塔基美語',
+      category: '教育培訓',
+      is_partner: true
+    }];
     
-    // 特約商家優先，其他商家補充
-    const recommendedStores = [...partnerFoodStores, ...otherFoodStores].slice(0, 5);
+  } else if (isFoodRelated) {
+    intent = 'FOOD';
+    confidence = 0.8;
+    matchedKeywords = foodKeywords.filter(keyword => message.includes(keyword));
     
-    response = `文山特區有很多超棒的美食選擇！我為你推薦幾家優質餐廳：
-
-${recommendedStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  const partnerIcon = store.is_partner_store ? '🤝' : '';
-  return `🍽️ **${store.store_name}** ${safeIcon}${discountIcon}${partnerIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}
-${store.is_partner_store ? '🤝 特約商家' : ''}`;
-}).join('\n\n')}
-
-📍 **交通資訊：**
-鄰近鳳山火車站，交通超便利的！
-
-有什麼特別想吃的料理嗎？我可以為你詳細介紹～ 😊`;
-  } else if (message.includes('停車') || message.includes('交通')) {
-    response = `文山特區的停車和交通資訊：
-
-🅿️ **停車資訊：**
-• 公有停車場：每小時20元
-• 路邊停車：每小時20元，限時3小時
-• 商場停車：每小時15-20元
-
-🚇 **交通方式：**
-• 鳳山火車站：步行5分鐘
-• 高雄捷運鳳山西站：步行10分鐘
-• 公車：多條路線經過
-
-需要更詳細的交通指引嗎？我對這裡超熟的！😊`;
-  } else if (message.includes('咖啡') || message.includes('咖啡廳') || message.includes('飲料')) {
-    // 搜索咖啡廳相關商家
-    const coffeeStores = getStoresByCategory('咖啡廳');
+    const foodStores = getStoresByCategory('美食餐廳');
+    recommendedStores = foodStores.slice(0, 3).map(store => ({
+      id: store.id,
+      name: store.store_name,
+      category: store.category,
+      is_partner: store.is_partner_store || false
+    }));
     
-    response = `文山特區有很多優質咖啡廳！我為您推薦：
+    response = `嘿～文山特區有很多不錯的美食選擇呢！🍱 我推薦以下幾家：
 
-${coffeeStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  return `☕ **${store.store_name}** ${safeIcon}${discountIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}`;
-}).join('\n\n')}
+${recommendedStores.map((store, i) => 
+  `${i + 1}. **${store.name}** ${store.is_partner ? '[特約商家]' : ''}\n   ${store.category}`
+).join('\n')}
 
-需要了解特定咖啡廳的詳細資訊嗎？`;
-  } else if (message.includes('文具') || message.includes('辦公用品') || message.includes('學生用品')) {
-    // 搜索文具相關商家
-    const stationeryStores = getStoresByCategory('文具用品');
+這些都是我蠻推薦的店家，有空不妨去試試看！如果有其他想了解的，也可以問我喔～ 😊`;
     
-    response = `文山特區的文具用品店推薦：
-
-${stationeryStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  return `📝 **${store.store_name}** ${safeIcon}${discountIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}`;
-}).join('\n\n')}
-
-需要找特定文具用品嗎？`;
-  } else if (message.includes('服飾') || message.includes('衣服') || message.includes('服裝')) {
-    // 搜索服飾相關商家
-    const clothingStores = getStoresByCategory('服飾');
+  } else if (isParkingRelated) {
+    intent = 'PARKING';
+    confidence = 0.8;
+    matchedKeywords = parkingKeywords.filter(keyword => message.includes(keyword));
     
-    response = `文山特區的服飾店推薦：
-
-${clothingStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  return `👕 **${store.store_name}** ${safeIcon}${discountIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}`;
-}).join('\n\n')}
-
-需要找特定風格的服飾嗎？`;
-  } else if (message.includes('3C') || message.includes('家電') || message.includes('電子產品')) {
-    // 搜索3C家電相關商家
-    const techStores = getStoresByCategory('3C家電');
+    const parkingStores = getStoresByCategory('停車場');
+    recommendedStores = parkingStores.slice(0, 3).map(store => ({
+      id: store.id,
+      name: store.store_name,
+      category: store.category,
+      is_partner: store.is_partner_store || false
+    }));
     
-    response = `文山特區的3C家電店推薦：
+    response = `停車的話，文山特區有幾個不錯的選擇：🅿️
 
-${techStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  return `📱 **${store.store_name}** ${safeIcon}${discountIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}`;
-}).join('\n\n')}
+${recommendedStores.map((store, i) => 
+  `${i + 1}. **${store.name}**\n   地址請洽詢管理單位`
+).join('\n')}
 
-需要找特定3C產品嗎？`;
-  } else if (message.includes('活動') || message.includes('市集') || message.includes('節慶')) {
-    response = `文山特區的活動資訊：
-
-🎉 **目前活動：**
-• 週末市集：每週六日，文山特區廣場
-• 美食節：本月舉辦中，多家餐廳優惠
-• 會員優惠：消費滿500送50
-
-📅 **定期活動：**
-• 文創市集：每月第一個週末
-• 親子活動：每月第三個週日
-• 節慶慶祝：春節、中秋等節日
-
-想了解哪個活動的詳細資訊呢？`;
-  } else if (message.includes('商店') || message.includes('購物') || message.includes('買') || message.includes('推薦') || message.includes('哪裡有')) {
-    // 根據關鍵字搜索相關商家，優先推薦特約商家
-    const keywords = ['商店', '購物', '買', '推薦', '哪裡有', '餐廳', '咖啡', '文具', '服飾', '3C', '家電'];
-    const allFoundStores = searchStores(keywords.filter(keyword => message.includes(keyword)));
-    const partnerStores = allFoundStores.filter(store => store.is_partner_store);
-    const otherStores = allFoundStores.filter(store => !store.is_partner_store);
+記得確認營業時間和收費標準喔！如果有其他問題也可以問我～ 😊`;
     
-    // 特約商家優先，其他商家補充
-    const recommendedStores = [...partnerStores, ...otherStores].slice(0, 5);
-    
-    if (recommendedStores.length > 0) {
-      response = `文山特區有很多優質商家！我為您推薦幾家：
-
-${recommendedStores.map(store => {
-  const safeIcon = store.is_safe_store ? '🛡️' : '';
-  const discountIcon = store.has_member_discount ? '⭐' : '';
-  const partnerIcon = store.is_partner_store ? '🤝' : '';
-  return `🏪 **${store.store_name}** ${safeIcon}${discountIcon}${partnerIcon}
-📍 ${store.address}
-📞 ${store.phone}
-🕒 ${store.business_hours}
-💡 ${store.features}
-${store.has_member_discount ? '🎁 會員優惠' : ''}
-${store.is_partner_store ? '🤝 特約商家' : ''}`;
-}).join('\n\n')}
-
-${allFoundStores.length > 5 ? `\n還有 ${allFoundStores.length - 5} 家商家可以選擇！` : ''}
-
-需要了解特定商家的詳細資訊嗎？`;
-    } else {
-      response = `文山特區的商店資訊：
-
-🛍️ **主要商圈：**
-• 文衡路商圈 - 服飾、生活用品
-• 文濱路商圈 - 3C、家電
-• 文龍路商圈 - 美食、咖啡廳
-
-🏪 **特色商店：**
-• 在地文創店 - 手作商品
-• 傳統市場 - 新鮮蔬果
-• 便利商店 - 24小時服務
-
-需要找特定商品嗎？`;
-    }
   } else {
-    response = `嘿！我是高文文，23歲的高雄女孩！文山特區的專屬客服助理～✨
+    intent = 'GENERAL';
+    confidence = 0.6;
+    matchedKeywords = ['推薦', '介紹'];
+    
+    const generalStores = getPartnerStores().slice(0, 2);
+    recommendedStores = generalStores.map(store => ({
+      id: store.id,
+      name: store.store_name,
+      category: store.category,
+      is_partner: true
+    }));
+    
+    response = `讓我為你推薦一些不錯的選擇：✨
 
-我可以幫你介紹：
-🍽️ 美食餐廳推薦
-🛍️ 商店購物資訊  
-🅿️ 交通停車指引
-🎉 活動優惠資訊
-📚 教育學習推薦
+${recommendedStores.map((store, i) => 
+  `${i + 1}. **${store.name}** [特約商家]\n   ${store.category}`
+).join('\n')}
 
-有什麼想知道的嗎？我對文山特區超熟的，很樂意為你服務！😊`;
+希望對你有幫助！如果有其他需求，也可以再問我沒關係！😊`;
   }
+  
+  const currentSessionId = sessionId || crypto.randomUUID();
   
   return {
-    response: response,
-    sessionId: sessionId || crypto.randomUUID(),
+    response,
+    session_id: currentSessionId,
+    intent,
+    confidence,
+    recommended_stores: recommendedStores,
+    debug: {
+      isFollowUp: false,
+      matchedKeywords,
+      storeCount: recommendedStores.length,
+      engine: 'mock-v1.0'
+    },
+    version: 'WEN 1.3.0-MOCK',
+    // 向後相容性
+    sessionId: currentSessionId,
     timestamp: new Date().toISOString()
-  }
+  };
 }

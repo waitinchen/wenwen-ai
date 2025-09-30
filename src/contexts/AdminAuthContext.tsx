@@ -116,6 +116,9 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       setPermissions([])
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_remember_me')
+      // 注意：不自動清除記住的帳號密碼，讓用戶自己決定
+      // localStorage.removeItem('admin_remembered_email')
+      // localStorage.removeItem('admin_remembered_password')
       sessionStorage.removeItem('admin_token')
     }
   }

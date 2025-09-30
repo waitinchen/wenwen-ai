@@ -22,9 +22,9 @@ interface ConversationSession {
   } | null
   line_users?: {
     id: number
-    line_uid: string
-    line_display_name: string
-    line_avatar_url?: string
+    line_user_id: string
+    display_name: string
+    picture_url?: string
   } | null
   // 為了向後相容，添加舊的欄位名稱
   user_ip?: string
@@ -52,6 +52,51 @@ const ConversationHistoryManager: React.FC = () => {
   const [isClearingData, setIsClearingData] = useState(false)
 
   // 生成 Mock 對話資料
+  // 從消息記錄重建會話資訊
+  const rebuildSessionsFromMessages = (messages: any[]): ConversationSession[] => {
+    const sessionGroups: { [key: string]: any[] } = {}
+
+    // 按會話ID分組消息
+    messages.forEach(message => {
+      const sessionId = message.session_id
+      if (!sessionGroups[sessionId]) {
+        sessionGroups[sessionId] = []
+      }
+      sessionGroups[sessionId].push(message)
+    })
+
+    // 為每個會話生成會話資訊
+    return Object.entries(sessionGroups).map(([sessionId, sessionMessages]) => {
+      const sortedMessages = sessionMessages.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+
+      const firstMessage = sortedMessages[0]
+      const lastMessage = sortedMessages[sortedMessages.length - 1]
+      const userMessages = sortedMessages.filter(msg => msg.message_type === 'user')
+
+      return {
+        id: sessionId,
+        session_id: sessionId,
+        user_id: null,
+        line_user_id: null,
+        client_ip: 'unknown',
+        user_agent: 'Unknown',
+        started_at: firstMessage.created_at,
+        last_active: lastMessage.created_at,
+        message_count: sessionMessages.length,
+        last_message_preview: userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '',
+        user_profiles: null,
+        line_users: null,
+        user_ip: 'unknown',
+        last_activity: lastMessage.created_at,
+        latest_message: userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '',
+        user_display_name: `用戶 (${sessionId.substring(0, 8)})`,
+        user_avatar: undefined
+      }
+    })
+  }
+
   const generateMockConversationData = async (): Promise<ConversationSession[]> => {
     const mockSessions: ConversationSession[] = [
       {
@@ -67,9 +112,9 @@ const ConversationHistoryManager: React.FC = () => {
         user_profiles: null,
         line_users: {
           id: 1,
-          line_uid: 'U1234567890',
-          line_display_name: '小明',
-          line_avatar_url: 'https://example.com/avatar1.jpg'
+          line_user_id: 'U1234567890',
+          display_name: '小明',
+          picture_url: 'https://example.com/avatar1.jpg'
         },
         user_ip: '192.168.1.100',
         session_id: 'mock-session-1',
@@ -91,9 +136,9 @@ const ConversationHistoryManager: React.FC = () => {
         user_profiles: null,
         line_users: {
           id: 2,
-          line_uid: 'U0987654321',
-          line_display_name: '小美',
-          line_avatar_url: 'https://example.com/avatar2.jpg'
+          line_user_id: 'U0987654321',
+          display_name: '小美',
+          picture_url: 'https://example.com/avatar2.jpg'
         },
         user_ip: '192.168.1.101',
         session_id: 'mock-session-2',
@@ -137,35 +182,86 @@ const ConversationHistoryManager: React.FC = () => {
   const loadConversations = async () => {
     try {
       setLoading(true)
-      
-      // 獲取會話列表 (支援新的用戶元資料格式)
+
+      console.log('[ConversationHistoryManager] 開始載入對話記錄...')
+
+      // 先檢查 chat_sessions 表格是否存在，並JOIN用戶資料
       const { data: sessionData, error: sessionError } = await supabase
         .from('chat_sessions')
         .select(`
           id,
+          session_id,
           user_id,
           line_user_id,
-          client_ip,
+          user_ip,
           user_agent,
           started_at,
-          last_active,
+          last_activity,
           message_count,
-          last_message_preview,
           user_meta,
-          line_users(
+          created_at,
+          updated_at,
+          user_profiles (
             id,
-            line_uid,
-            line_display_name,
-            line_avatar_url
+            display_name,
+            avatar_url
+          ),
+          line_users (
+            id,
+            line_user_id,
+            display_name,
+            picture_url
           )
         `)
-        .order(sortBy, { ascending: sortOrder === 'asc' })
+        .order(sortBy === 'last_activity' ? 'last_activity' : sortBy, { ascending: sortOrder === 'asc' })
         .limit(100)
 
+      console.log('[ConversationHistoryManager] Supabase 查詢結果:', {
+        sessionCount: sessionData?.length || 0,
+        hasError: !!sessionError,
+        errorDetails: sessionError
+      })
+
       if (sessionError) {
-        console.error('載入會話失敗:', sessionError)
-        // 使用 Mock 資料作為回退
-        console.log('使用 Mock 資料作為回退')
+        console.error('[ConversationHistoryManager] 載入會話失敗:', {
+          message: sessionError.message,
+          code: sessionError.code,
+          details: sessionError.details,
+          hint: sessionError.hint
+        })
+
+        // 如果是表格不存在或權限問題，嘗試直接查詢 chat_messages
+        console.log('[ConversationHistoryManager] 嘗試從 chat_messages 表格重建會話資料...')
+
+        try {
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('chat_messages')
+            .select('session_id, message_type, content, created_at')
+            .order('created_at', { ascending: false })
+            .limit(200)
+
+          if (!messagesError && messagesData && messagesData.length > 0) {
+            console.log('[ConversationHistoryManager] 從消息重建會話，找到', messagesData.length, '條消息')
+            const rebuiltSessions = rebuildSessionsFromMessages(messagesData)
+            setSessions(rebuiltSessions)
+            setTotalStats({
+              totalSessions: rebuiltSessions.length,
+              totalMessages: messagesData.length,
+              todaySessions: rebuiltSessions.filter(s => {
+                const today = new Date().toDateString()
+                const sessionDate = new Date(s.started_at).toDateString()
+                return today === sessionDate
+              }).length
+            })
+            setLoading(false)
+            return
+          }
+        } catch (rebuildError) {
+          console.error('[ConversationHistoryManager] 重建會話失敗:', rebuildError)
+        }
+
+        // 最後使用 Mock 資料作為回退
+        console.log('[ConversationHistoryManager] 使用 Mock 資料作為回退')
         const mockSessions = await generateMockConversationData()
         setSessions(mockSessions)
         setTotalStats({
@@ -186,44 +282,54 @@ const ConversationHistoryManager: React.FC = () => {
         return
       }
 
-      // 處理會話資料 (支援新的用戶元資料格式)
+      // 處理會話資料 (支援新舊格式相容)
       const sessionsWithDetails = sessionData.map((session) => {
-        // 處理 line_users 的陣列結構
-        const lineUser = Array.isArray(session.line_users)
-          ? session.line_users[0]
-          : session.line_users;
+        console.log('[ConversationHistoryManager] 處理會話資料:', session)
 
         // 解析用戶元資料
         let userMeta = null;
         try {
-          userMeta = session.user_meta ? JSON.parse(session.user_meta) : null;
+          if (session.user_meta) {
+            userMeta = typeof session.user_meta === 'string'
+              ? JSON.parse(session.user_meta)
+              : session.user_meta;
+          }
         } catch (error) {
-          console.warn('解析用戶元資料失敗:', error);
+          console.warn('[ConversationHistoryManager] 解析用戶元資料失敗:', error);
         }
 
-        // 優先使用 user_meta 中的資訊，其次使用 line_users
-        const displayName = userMeta?.display_name || 
-                           lineUser?.line_display_name || 
-                           `用戶 ${session.client_ip || '未知'}`;
-        const avatarUrl = userMeta?.avatar_url || lineUser?.line_avatar_url;
+        // 相容性處理：處理不同的欄位名稱
+        const userIp = session.user_ip || 'unknown'
+        const lastActivity = session.last_activity || session.created_at
+        const sessionId = session.session_id || session.id
+
+        // 生成顯示名稱 - 優先使用JOIN的資料，再用userMeta作為fallback
+        const displayName = session.user_profiles?.[0]?.display_name ||
+                            session.line_users?.[0]?.display_name ||
+                            userMeta?.display_name ||
+                            userMeta?.line_display_name ||
+                            `用戶 ${userIp === 'unknown' ? '未知' : userIp}`;
+        const avatarUrl = session.user_profiles?.[0]?.avatar_url ||
+                          session.line_users?.[0]?.picture_url ||
+                          userMeta?.avatar_url ||
+                          userMeta?.line_avatar_url;
 
         return {
-          id: session.id,
+          id: session.id || sessionId,
           user_id: session.user_id,
           line_user_id: session.line_user_id,
-          client_ip: session.client_ip,
-          user_agent: session.user_agent,
-          started_at: session.started_at,
-          last_active: session.last_active,
-          message_count: session.message_count,
-          last_message_preview: session.last_message_preview,
-          user_profiles: null, // user_profiles 表不存在
-          line_users: lineUser,
+          user_ip: userIp,
+          user_agent: session.user_agent || 'Unknown',
+          started_at: session.started_at || session.created_at || new Date().toISOString(),
+          last_activity: lastActivity,
+          last_active: lastActivity, // 添加缺失的欄位
+          message_count: session.message_count || 0,
+          last_message_preview: '', // 稍後從消息表查詢
+          user_profiles: session.user_profiles?.[0] || null,
+          line_users: session.line_users?.[0] || null,
           // 為了向後相容，添加舊的欄位名稱
-          user_ip: session.client_ip,
-          session_id: session.id,
-          last_activity: session.last_active,
-          latest_message: session.last_message_preview,
+          session_id: sessionId,
+          latest_message: '', // 稍後從消息表查詢
           user_display_name: displayName,
           user_avatar: avatarUrl
         }
@@ -397,9 +503,9 @@ const ConversationHistoryManager: React.FC = () => {
         user_avatar: hasLineUser ? `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}` : '',
         line_users: hasLineUser ? {
           id: i + 1,
-          line_uid: `test_user_${i + 1}`,
-          line_display_name: `測試用戶${i + 1}`,
-          line_avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}`
+          line_user_id: `test_user_${i + 1}`,
+          display_name: `測試用戶${i + 1}`,
+          picture_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}`
         } : null
       })
     }

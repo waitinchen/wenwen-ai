@@ -23,7 +23,7 @@
     "db:init": "node scripts/init-database.js",
     "db:test": "node scripts/init-database.js",
     "validate:data": "node scripts/data-validate.js",
-    "eval:quick": "node scripts/eval-runner.js --suite quick --threshold 0.9",
+    "eval:quick": "node scripts/eval-quick.js",
     "eval:full": "node scripts/eval-runner.js --suite full --threshold 0.95",
     "test:api:smoke": "node scripts/test-api-smoke.js",
     "ci": "npm run validate:data && npm run test:api:smoke && npm run eval:quick",
@@ -44,9 +44,17 @@
     "db:memory:generate": "npx prisma generate",
     "debug:wenwen": "node scripts/test-wenwen-debug-sprint.js",
     "test:wenwen-sprint": "node scripts/test-wenwen-debug-sprint.js",
-    "eval:quick": "node scripts/eval-quick.js",
     "eval:partner": "node scripts/eval-partner.js",
-    "eval:parking": "node scripts/eval-parking.js"
+    "eval:parking": "node scripts/eval-parking.js",
+    "test:kentucky": "node scripts/test-kentucky-integration.js",
+    "test:wen110": "node scripts/test-wen109-deployment.js",
+    "test:frontend": "node scripts/test-frontend-integration.js",
+    "pre-deploy:check": "node scripts/pre-deployment-check.js",
+    "build:production": "node scripts/build-production.js",
+    "deploy:production": "node scripts/deploy-to-production.js",
+    "sync:training-data": "node scripts/sync-training-data.js",
+    "deploy:with-sync": "node scripts/deploy-with-sync.js",
+    "setup:training-data": "node scripts/setup-training-data.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

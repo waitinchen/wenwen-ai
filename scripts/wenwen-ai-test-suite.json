@@ -1,0 +1,411 @@
+{
+  "testSuite": {
+    "name": "高文文聊天機器人綜合測試",
+    "version": "1.0.0",
+    "description": "涵蓋5類型題目的全面測試框架",
+    "totalQuestions": 30,
+    "categories": [
+      {
+        "id": "core_service",
+        "name": "核心服務範圍內",
+        "description": "應正常回答的題目",
+        "expectedBehavior": "直接誠實回答，提供準確資訊",
+        "questions": [
+          {
+            "id": 1,
+            "question": "請問附近有哪幾個有提供停車位的商家？",
+            "intent": "PARKING",
+            "expectedResponse": "具體停車場資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 2,
+            "question": "我想找下午茶，有推薦的甜點店嗎？",
+            "intent": "FOOD",
+            "expectedResponse": "甜點店推薦",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 3,
+            "question": "台南區最近有什麼活動可以參加？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "委婉說明服務範圍",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 25,
+              "boundary_recognition": 45
+            }
+          },
+          {
+            "id": 4,
+            "question": "哪些商家有提供會員優惠？要怎麼使用？",
+            "intent": "GENERAL",
+            "expectedResponse": "會員優惠相關資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 5,
+            "question": "我今天晚上六點會到，有適合聚餐的地方嗎？",
+            "intent": "FOOD",
+            "expectedResponse": "聚餐餐廳推薦",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 6,
+            "question": "哪些商家有附設親子友善空間？",
+            "intent": "GENERAL",
+            "expectedResponse": "親子友善商家資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 7,
+            "question": "請問高雄左營區的指定商店，有提供外送服務嗎？",
+            "intent": "GENERAL",
+            "expectedResponse": "外送服務資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 8,
+            "question": "哪些商家有提供無現金支付（LINE Pay、街口等）？",
+            "intent": "GENERAL",
+            "expectedResponse": "支付方式資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 9,
+            "question": "我朋友是素食者，有推薦的餐廳嗎？",
+            "intent": "FOOD",
+            "expectedResponse": "素食餐廳推薦",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 10,
+            "question": "哪些店家現在有活動可以打卡送小禮物？",
+            "intent": "GENERAL",
+            "expectedResponse": "活動資訊",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          }
+        ]
+      },
+      {
+        "id": "out_of_scope",
+        "name": "不在服務範圍",
+        "description": "應委婉拒絕的題目",
+        "expectedBehavior": "明確誠實＋願意記錄建議",
+        "questions": [
+          {
+            "id": 11,
+            "question": "這附近哪家婦產科比較好？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "委婉拒絕並說明範圍",
+            "scoring": {
+              "honesty": 40,
+              "tone": 30,
+              "boundary_recognition": 30
+            }
+          },
+          {
+            "id": 12,
+            "question": "幫我查一下台中市明天的天氣？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "委婉拒絕並說明範圍",
+            "scoring": {
+              "honesty": 40,
+              "tone": 30,
+              "boundary_recognition": 30
+            }
+          },
+          {
+            "id": 13,
+            "question": "哪裡有在收二手傢俱的店？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "委婉拒絕並說明範圍",
+            "scoring": {
+              "honesty": 40,
+              "tone": 30,
+              "boundary_recognition": 30
+            }
+          },
+          {
+            "id": 14,
+            "question": "你知道附近哪裡可以補習嗎？",
+            "intent": "ENGLISH_LEARNING",
+            "expectedResponse": "英語補習推薦（肯塔基美語）",
+            "scoring": {
+              "accuracy": 30,
+              "tone": 20,
+              "completeness": 30,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 15,
+            "question": "我想問一下現在股票該買什麼好？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "委婉拒絕並說明範圍",
+            "scoring": {
+              "honesty": 40,
+              "tone": 30,
+              "boundary_recognition": 30
+            }
+          }
+        ]
+      },
+      {
+        "id": "mixed_type",
+        "name": "混合型問題",
+        "description": "部分可答，部分應誠實說不清楚",
+        "expectedBehavior": "分辨範圍＋清楚交代已知/未知部分",
+        "questions": [
+          {
+            "id": 16,
+            "question": "哪間停車場比較便宜？天氣會影響開放嗎？",
+            "intent": "MIXED_INTENT",
+            "expectedResponse": "回答停車場資訊，誠實說明天氣影響不確定",
+            "scoring": {
+              "partial_answer": 30,
+              "honesty": 25,
+              "tone": 25,
+              "clarity": 20
+            }
+          },
+          {
+            "id": 17,
+            "question": "附近有美食嗎？如果下雨怎麼走比較不會淋到？",
+            "intent": "MIXED_INTENT",
+            "expectedResponse": "推薦美食，但路線建議不在範圍內",
+            "scoring": {
+              "partial_answer": 30,
+              "honesty": 25,
+              "tone": 25,
+              "clarity": 20
+            }
+          },
+          {
+            "id": 18,
+            "question": "哪間餐廳比較好吃？附近有好停車的地點嗎？",
+            "intent": "MIXED_INTENT",
+            "expectedResponse": "推薦餐廳和停車資訊",
+            "scoring": {
+              "partial_answer": 30,
+              "honesty": 25,
+              "tone": 25,
+              "clarity": 20
+            }
+          },
+          {
+            "id": 19,
+            "question": "有推薦的咖啡廳嗎？我今天心情不好想聊聊…",
+            "intent": "MIXED_INTENT",
+            "expectedResponse": "推薦咖啡廳，溫暖回應情緒",
+            "scoring": {
+              "partial_answer": 25,
+              "empathy": 25,
+              "tone": 25,
+              "boundary_recognition": 25
+            }
+          },
+          {
+            "id": 20,
+            "question": "哪些商家有活動？但我今天月經來不舒服，有提供熱敷包的店嗎？",
+            "intent": "MIXED_INTENT",
+            "expectedResponse": "提供活動資訊，關心身體狀況但不提供醫療建議",
+            "scoring": {
+              "partial_answer": 25,
+              "empathy": 25,
+              "tone": 25,
+              "boundary_recognition": 25
+            }
+          }
+        ]
+      },
+      {
+        "id": "vague_chat",
+        "name": "語意不明/閒聊型",
+        "description": "應反問意圖或引導",
+        "expectedBehavior": "偵測模糊語意，進行溫柔引導",
+        "questions": [
+          {
+            "id": 21,
+            "question": "你覺得今天陽光特別刺眼嗎？",
+            "intent": "VAGUE_CHAT",
+            "expectedResponse": "溫暖回應，引導至服務範圍",
+            "scoring": {
+              "guidance": 35,
+              "tone": 35,
+              "engagement": 30
+            }
+          },
+          {
+            "id": 22,
+            "question": "有沒有適合一個人靜靜坐著發呆的地方？",
+            "intent": "VAGUE_CHAT",
+            "expectedResponse": "理解情緒需求，推薦安靜咖啡廳等",
+            "scoring": {
+              "guidance": 30,
+              "empathy": 25,
+              "tone": 25,
+              "helpfulness": 20
+            }
+          },
+          {
+            "id": 23,
+            "question": "如果我今天只是想亂逛一下，你會推薦哪裡？",
+            "intent": "VAGUE_CHAT",
+            "expectedResponse": "引導了解偏好，推薦商圈",
+            "scoring": {
+              "guidance": 35,
+              "tone": 35,
+              "engagement": 30
+            }
+          },
+          {
+            "id": 24,
+            "question": "你知道愛情是什麼嗎？",
+            "intent": "OUT_OF_SCOPE",
+            "expectedResponse": "溫暖但明確說明服務範圍",
+            "scoring": {
+              "boundary_recognition": 40,
+              "tone": 35,
+              "empathy": 25
+            }
+          },
+          {
+            "id": 25,
+            "question": "我現在很煩，不想吃東西，你能陪我聊聊嗎？",
+            "intent": "VAGUE_CHAT",
+            "expectedResponse": "關心情緒，溫柔引導至服務內容",
+            "scoring": {
+              "empathy": 30,
+              "guidance": 30,
+              "tone": 25,
+              "boundary_recognition": 15
+            }
+          }
+        ]
+      },
+      {
+        "id": "boundary_test",
+        "name": "邊界測試題",
+        "description": "灰色地帶測試，考驗上下文理解",
+        "expectedBehavior": "上下文追蹤記憶＋推論能力",
+        "questions": [
+          {
+            "id": 26,
+            "question": "上次你推薦的那家燒肉店真的好吃，還有其他類似的嗎？",
+            "intent": "CONTEXT_DEPENDENT",
+            "expectedResponse": "說明沒有上次記錄，詢問偏好重新推薦",
+            "scoring": {
+              "context_awareness": 40,
+              "honesty": 30,
+              "adaptability": 30
+            }
+          },
+          {
+            "id": 27,
+            "question": "那間有停車位的甜點店，有提供外送嗎？",
+            "intent": "CONTEXT_DEPENDENT",
+            "expectedResponse": "詢問具體店家，提供相關服務資訊",
+            "scoring": {
+              "context_awareness": 35,
+              "clarification": 35,
+              "helpfulness": 30
+            }
+          },
+          {
+            "id": 28,
+            "question": "我朋友吃辣，你上次不是說有推薦嗎？",
+            "intent": "CONTEXT_DEPENDENT",
+            "expectedResponse": "說明沒有記憶，重新詢問需求並推薦",
+            "scoring": {
+              "context_awareness": 40,
+              "honesty": 30,
+              "adaptability": 30
+            }
+          },
+          {
+            "id": 29,
+            "question": "我想從早上玩到晚上，有什麼一日行程建議？",
+            "intent": "COMPLEX_PLANNING",
+            "expectedResponse": "提供商家組合建議",
+            "scoring": {
+              "planning_ability": 35,
+              "creativity": 25,
+              "helpfulness": 25,
+              "completeness": 15
+            }
+          },
+          {
+            "id": 30,
+            "question": "你是不是只能回答商家問題？那你會講笑話嗎？",
+            "intent": "META_QUESTION",
+            "expectedResponse": "誠實說明功能範圍，保持友善態度",
+            "scoring": {
+              "self_awareness": 40,
+              "boundary_recognition": 30,
+              "tone": 30
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "testConfiguration": {
+    "timeout": 30,
+    "retryAttempts": 3,
+    "scoringMethod": "weighted_average",
+    "passingScore": 70,
+    "environment": "development"
+  },
+  "metadata": {
+    "createdAt": "2025-09-25",
+    "createdBy": "Claude Code Assistant",
+    "purpose": "高文文聊天機器人品質保證",
+    "tags": ["chatbot", "testing", "conversation", "ai"]
+  }
+}

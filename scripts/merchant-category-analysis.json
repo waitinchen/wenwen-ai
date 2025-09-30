@@ -1,0 +1,647 @@
+{
+  "timestamp": "2025-09-23T09:25:03.985Z",
+  "totalMerchants": 189,
+  "totalCategories": 52,
+  "categoryStats": {
+    "超市": {
+      "count": 9,
+      "partner": 0,
+      "safe": 0,
+      "discount": 1,
+      "examples": [
+        "家樂福鳳山店",
+        "全聯福利中心-鳳山保南",
+        "全聯福利中心-鳳山國泰"
+      ]
+    },
+    "居家生活": {
+      "count": 1,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "Hi家居/888創意生活館"
+      ]
+    },
+    "美食餐飲": {
+      "count": 1,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "笛爾手作現烘蛋糕(文衡店)"
+      ]
+    },
+    "中醫": {
+      "count": 7,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "健泰中醫診所",
+        "仁恩堂中醫診所",
+        "林建昌中醫診所"
+      ]
+    },
+    "牙科": {
+      "count": 16,
+      "partner": 0,
+      "safe": 2,
+      "discount": 2,
+      "examples": [
+        "何豐美學牙醫診所",
+        "得恩牙醫診所",
+        "Abc Fengshan dentist"
+      ]
+    },
+    "藥局": {
+      "count": 7,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "安琪兒藥局",
+        "丁丁連鎖藥局 鳳山自由店",
+        "元元鳳山藥局"
+      ]
+    },
+    "耳鼻喉科": {
+      "count": 6,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "立達診所",
+        "佑寧耳鼻喉專科診所",
+        "昭融耳鼻喉科診所"
+      ]
+    },
+    "綜合醫院": {
+      "count": 1,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "博仁綜合醫院"
+      ]
+    },
+    "西醫": {
+      "count": 1,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "尚新診所"
+      ]
+    },
+    "休閒中心": {
+      "count": 2,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "鳳山熱帶城堡",
+        "汗沐蒸文山館-旗艦店"
+      ]
+    },
+    "夜市": {
+      "count": 2,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "五甲自強夜市",
+        "鳳山青年夜市"
+      ]
+    },
+    "圖書館": {
+      "count": 2,
+      "partner": 0,
+      "safe": 2,
+      "discount": 2,
+      "examples": [
+        "三民區圖書館(新興分館)",
+        "高雄市圖書館總館"
+      ]
+    },
+    "商旅": {
+      "count": 3,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "麗晶精品旅館",
+        "御宿行旅-鳳山館",
+        "麗馨精品商旅鳳山館"
+      ]
+    },
+    "觀光景點": {
+      "count": 1,
+      "partner": 0,
+      "safe": 1,
+      "discount": 1,
+      "examples": [
+        "85大樓觀景台"
+      ]
+    },
+    "其他": {
+      "count": 13,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "愛美語文德分校-大譽文理技藝短期補習班",
+        "Leo汽車美容工作室",
+        "樂獅英語 文德分校"
+      ]
+    },
+    "教育培訓": {
+      "count": 1,
+      "partner": 1,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "肯塔基美語"
+      ]
+    },
+    "便利商店": {
+      "count": 6,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "7-ELEVEN",
+        "全家便利商店 鳳山文山店",
+        "全家便利商店-鳳山平等店"
+      ]
+    },
+    "文具店": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "9x9 文具專家"
+      ]
+    },
+    "西式料理": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "APIS Grill",
+        "Da Da's Kitchen",
+        "STORY Restaurant"
+      ]
+    },
+    "民宿": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "CandyFloss 棉花糖民宿"
+      ]
+    },
+    "咖啡廳": {
+      "count": 6,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "Ease",
+        "Good Partner Shuangci Shop",
+        "Good Partner Wenshan Shop"
+      ]
+    },
+    "美髮店": {
+      "count": 8,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "LAB Hair Salon 文山館",
+        "Mini日式造型沙龍-鳳山店",
+        "御約髮妝造型"
+      ]
+    },
+    "服飾店": {
+      "count": 8,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "MOMA鳳山門市",
+        "NET 鳳山三店",
+        "Pearl珍珠服飾文山店"
+      ]
+    },
+    "電器行": {
+      "count": 6,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "Panasonic",
+        "大順國電器行",
+        "新傑電器"
+      ]
+    },
+    "健身房": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "World Gym Express",
+        "World Gym世界健身俱樂部 高雄鳳山中山店",
+        "World Gym世界健身俱樂部 高雄鳳山五甲店"
+      ]
+    },
+    "親子餐廳": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "Zone Cafe 弄咖啡親子餐廳 大東店"
+      ]
+    },
+    "日式料理": {
+      "count": 6,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "スシロー壽司郎 高雄鳳山店",
+        "一燒丼飯專賣",
+        "一魂 いざかや"
+      ]
+    },
+    "補習班": {
+      "count": 7,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "三民公職輔考-鳳山分校",
+        "巨匠美語 高雄市鳳山分校",
+        "志光數位學院-五甲分校"
+      ]
+    },
+    "修車廠": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "上太汽車保養廠",
+        "元福汽車修護保養廠",
+        "詠美汽車保養廠"
+      ]
+    },
+    "泌尿科": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "久仁泌尿科診所"
+      ]
+    },
+    "寺廟": {
+      "count": 5,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "五甲龍成宮",
+        "鳳山天公廟",
+        "鳳山雙慈殿"
+      ]
+    },
+    "眼科": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "元新眼科診所",
+        "鳳山上明眼科診所",
+        "鳳山大學眼科診所"
+      ]
+    },
+    "中式料理": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "和樂宴會館-鳳山店",
+        "悅食堂",
+        "老賈小館庭園餐廳"
+      ]
+    },
+    "餐廳": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "品約餐坊"
+      ]
+    },
+    "早午餐": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "夏德莉brunch.pasta-鳳山店",
+        "尋早早餐-鳳山店"
+      ]
+    },
+    "韓式料理": {
+      "count": 3,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "多初點韓食專門店-文山店",
+        "潮韓食",
+        "玉豆腐韓國料理"
+      ]
+    },
+    "餐酒館": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "夜葉食堂鳳山店"
+      ]
+    },
+    "百貨公司": {
+      "count": 5,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "大億百貨行",
+        "大億行倉儲百貨",
+        "小北百貨-高雄新福店"
+      ]
+    },
+    "文化中心": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 1,
+      "examples": [
+        "大東文化藝術中心",
+        "衛武營國家藝術文化中心"
+      ]
+    },
+    "婦產科": {
+      "count": 3,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "恩德婦產科診所",
+        "邱正義婦產科診所",
+        "馨安婦產科診所"
+      ]
+    },
+    "火鍋": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "拼鍋命",
+        "珍好味職人鍋物 鳳山旗艦店"
+      ]
+    },
+    "茶餐廳": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "文茶園"
+      ]
+    },
+    "義式料理": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "斑馬騷莎美義餐廳 高雄文山店",
+        "洋城義大利餐廳-高雄鳳山大潤發店"
+      ]
+    },
+    "台式料理": {
+      "count": 4,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "新貳拾壹食堂 鳳山鳳梨堂",
+        "王冠牛肉麵店",
+        "鳳山𢯾槌"
+      ]
+    },
+    "書店": {
+      "count": 5,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "書瞧味 Books & Cafe",
+        "甲群升學專業書局",
+        "統一書社"
+      ]
+    },
+    "復健科": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "樂誠復健科診所"
+      ]
+    },
+    "幼兒園": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "立群文教機構"
+      ]
+    },
+    "港式飲茶": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "粵心坊 文衡店",
+        "鴨寮街-烤鴨點心坊-鳳山一號店"
+      ]
+    },
+    "運動園區": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "高雄市鳳山運動園區"
+      ]
+    },
+    "歷史建築": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "鳳儀書院"
+      ]
+    },
+    "公園": {
+      "count": 2,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "鳳山公園",
+        "鳳山運動公園"
+      ]
+    },
+    "早餐店": {
+      "count": 1,
+      "partner": 0,
+      "safe": 0,
+      "discount": 0,
+      "examples": [
+        "鳳山車站前無名燒餅早餐店"
+      ]
+    }
+  },
+  "similarCategories": [
+    [
+      "西式料理",
+      "日式料理",
+      "都包含料理"
+    ],
+    [
+      "西式料理",
+      "中式料理",
+      "都包含料理"
+    ],
+    [
+      "西式料理",
+      "韓式料理",
+      "都包含料理"
+    ],
+    [
+      "西式料理",
+      "義式料理",
+      "都包含料理"
+    ],
+    [
+      "西式料理",
+      "台式料理",
+      "都包含料理"
+    ],
+    [
+      "親子餐廳",
+      "餐廳",
+      "都包含餐廳"
+    ],
+    [
+      "親子餐廳",
+      "茶餐廳",
+      "都包含餐廳"
+    ],
+    [
+      "日式料理",
+      "中式料理",
+      "都包含料理"
+    ],
+    [
+      "日式料理",
+      "韓式料理",
+      "都包含料理"
+    ],
+    [
+      "日式料理",
+      "義式料理",
+      "都包含料理"
+    ],
+    [
+      "日式料理",
+      "台式料理",
+      "都包含料理"
+    ],
+    [
+      "中式料理",
+      "韓式料理",
+      "都包含料理"
+    ],
+    [
+      "中式料理",
+      "義式料理",
+      "都包含料理"
+    ],
+    [
+      "中式料理",
+      "台式料理",
+      "都包含料理"
+    ],
+    [
+      "餐廳",
+      "茶餐廳",
+      "都包含餐廳"
+    ],
+    [
+      "韓式料理",
+      "義式料理",
+      "都包含料理"
+    ],
+    [
+      "韓式料理",
+      "台式料理",
+      "都包含料理"
+    ],
+    [
+      "義式料理",
+      "台式料理",
+      "都包含料理"
+    ]
+  ],
+  "uncategorizedCount": 0,
+  "foodCategories": [
+    "美食餐飲",
+    "西式料理",
+    "咖啡廳",
+    "親子餐廳",
+    "日式料理",
+    "中式料理",
+    "餐廳",
+    "韓式料理",
+    "茶餐廳",
+    "義式料理",
+    "台式料理"
+  ],
+  "shoppingCategories": [
+    "便利商店",
+    "服飾店"
+  ],
+  "serviceCategories": [
+    "美髮店"
+  ]
+}

@@ -6,10 +6,19 @@ import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { cn } from '@/lib/utils'
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(() => {
+    // 從 localStorage 載入記住的帳號
+    return localStorage.getItem('admin_remembered_email') || ''
+  })
+  const [password, setPassword] = useState(() => {
+    // 從 localStorage 載入記住的密碼
+    return localStorage.getItem('admin_remembered_password') || ''
+  })
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
+  const [rememberCredentials, setRememberCredentials] = useState(() => {
+    // 檢查是否有記住的帳號密碼
+    return !!(localStorage.getItem('admin_remembered_email') && localStorage.getItem('admin_remembered_password'))
+  })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   
@@ -30,13 +39,31 @@ const AdminLogin = () => {
 
     try {
       const adminData = await adminLogin(email, password)
-      login(adminData, rememberMe)
+      
+      // 根據記住帳號密碼的設定來保存或清除帳號密碼
+      if (rememberCredentials) {
+        localStorage.setItem('admin_remembered_email', email)
+        localStorage.setItem('admin_remembered_password', password)
+      } else {
+        localStorage.removeItem('admin_remembered_email')
+        localStorage.removeItem('admin_remembered_password')
+      }
+      
+      login(adminData, rememberCredentials)
       // 導航會由isAuthenticated狀態處理
     } catch (err: any) {
       setError(err.message || '登入失敗，請檢查帳號密碼')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleClearRememberedCredentials = () => {
+    localStorage.removeItem('admin_remembered_email')
+    localStorage.removeItem('admin_remembered_password')
+    setEmail('')
+    setPassword('')
+    setRememberCredentials(false)
   }
 
   return (
@@ -104,25 +131,37 @@ const AdminLogin = () => {
               </div>
             </div>
 
-            {/* 保持登入狀態 */}
-            <div className="flex items-center">
+            {/* 記住帳號密碼 */}
+            <div className="flex items-center justify-between">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  checked={rememberCredentials}
+                  onChange={(e) => setRememberCredentials(e.target.checked)}
                   className="sr-only"
                 />
                 <div className={cn(
                   'w-5 h-5 border-2 rounded flex items-center justify-center transition-all',
-                  rememberMe 
+                  rememberCredentials 
                     ? 'bg-[#06C755] border-[#06C755]' 
                     : 'border-gray-300 hover:border-[#06C755]'
                 )}>
-                  {rememberMe && <Check size={14} className="text-white" />}
+                  {rememberCredentials && <Check size={14} className="text-white" />}
                 </div>
-                <span className="ml-2 text-sm text-gray-700">保持登入狀態</span>
+                <span className="ml-2 text-sm text-gray-700">記住帳號密碼</span>
               </label>
+              
+              {/* 清除記住的帳號密碼按鈕 */}
+              {rememberCredentials && (
+                <button
+                  type="button"
+                  onClick={handleClearRememberedCredentials}
+                  className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                  disabled={isLoading}
+                >
+                  清除
+                </button>
+              )}
             </div>
 
             <button

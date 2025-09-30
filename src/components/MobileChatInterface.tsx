@@ -4,6 +4,7 @@ import { cn, isMobile } from '@/lib/utils'
 import { useToast } from '@/components/Toast'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Skeleton from '@/components/Skeleton'
+import { CURRENT_VERSION } from '@/config/version'
 
 interface Message {
   id: string
@@ -198,7 +199,7 @@ const MobileChatInterface: React.FC<MobileChatInterfaceProps> = ({ className }) 
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="輸入您的訊息..."
+              placeholder="輸入您的問題..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               disabled={isLoading}
             />
@@ -219,6 +220,13 @@ const MobileChatInterface: React.FC<MobileChatInterfaceProps> = ({ className }) 
               <Send className="w-5 h-5" />
             )}
           </button>
+        </div>
+        
+        {/* 版本號顯示 */}
+        <div className="flex justify-center mt-2">
+          <span className="text-xs text-gray-400 font-mono">
+            {CURRENT_VERSION.version}
+          </span>
         </div>
       </div>
     </div>
