@@ -3,8 +3,37 @@ import { mockAdminLogin, mockAdminVerifyToken, mockAdminLogout } from '@/lib/moc
 
 export interface ChatResponse {
   response: string
-  sessionId: string
-  timestamp: string
+  session_id: string
+  intent: string
+  confidence: number
+  recommended_stores: Array<{
+    id: number
+    name: string
+    category: string
+    is_partner: boolean
+    // 新增允許清單架構欄位
+    sponsorship_tier?: number
+    store_code?: string
+    evidence_level?: string
+  }>
+  debug: {
+    isFollowUp: boolean
+    matchedKeywords: string[]
+    storeCount: number
+    engine: string
+  }
+  // 新增允許清單架構回應欄位
+  recommendation_logic?: {
+    intent: string
+    eligible_count: number
+    final_count: number
+    kentucky_included: boolean
+    evidence_verified: boolean
+  }
+  version: string
+  // 向後相容性
+  sessionId?: string
+  timestamp?: string
 }
 
 export async function sendMessage(
@@ -14,8 +43,8 @@ export async function sendMessage(
   userMeta?: { external_id?: string, display_name?: string, avatar_url?: string }
 ): Promise<ChatResponse> {
   try {
-    // 使用新的 API 格式
-    console.log('使用修復後的 Edge Function API')
+    // 使用 claude-chat Edge Function API (允許清單架構已整合)
+    console.log('使用 claude-chat Edge Function API')
     const { data, error } = await supabase.functions.invoke('claude-chat', {
       body: {
         session_id: sessionId,
@@ -32,14 +61,67 @@ export async function sendMessage(
     })
 
     if (error) {
-      console.error('Chatbot error:', error)
+      console.error('Allowlist recommendation error:', error)
       throw error
     }
 
-    return data.data as ChatResponse
+    // 檢查回應格式 - 支援允許清單架構回應
+    if (data && data.response) {
+      // 允許清單架構回應格式
+      const response = data as ChatResponse
+      // 向後相容性處理
+      response.sessionId = response.session_id
+      response.timestamp = new Date().toISOString()
+      
+      // 處理推薦商家格式轉換
+      if (response.recommended_stores) {
+        response.recommended_stores = response.recommended_stores.map(store => ({
+          ...store,
+          is_partner: store.sponsorship_tier ? store.sponsorship_tier > 0 : false
+        }))
+      }
+      
+      return response
+    } else if (data && data.data) {
+      // 舊版回應格式
+      return data.data as ChatResponse
+    } else {
+      console.error('Unexpected response format:', data)
+      throw new Error('Unexpected response format from Edge Function')
+    }
   } catch (error) {
-    console.warn('Edge Function failed, using mock chat API:', error)
-    // 如果 Edge Function 失敗，使用模擬聊天 API
+    console.warn('Allowlist recommendation failed, trying smart-action fallback:', error)
+    
+    // 如果允許清單推薦失敗，嘗試使用 smart-action 作為後備
+    try {
+      console.log('嘗試 smart-action 作為後備方案')
+      const { data, error } = await supabase.functions.invoke('smart-action', {
+        body: {
+          session_id: sessionId,
+          message: { 
+            role: 'user', 
+            content: message 
+          },
+          user_meta: {
+            external_id: userMeta?.external_id || lineUid || getClientId(),
+            display_name: userMeta?.display_name,
+            avatar_url: userMeta?.avatar_url
+          }
+        }
+      })
+
+      if (!error && data && data.response) {
+        const response = data as ChatResponse
+        response.sessionId = response.session_id
+        response.timestamp = new Date().toISOString()
+        return response
+      }
+    } catch (fallbackError) {
+      console.warn('Smart-action fallback also failed:', fallbackError)
+    }
+    
+    // 如果所有 Edge Function 都失敗，使用模擬聊天 API
+    console.warn('All Edge Functions failed, using mock chat API')
     const { mockSendMessage } = await import('./mockClaudeChat')
     return await mockSendMessage(message, sessionId, lineUid)
   }
@@ -258,11 +340,17 @@ export async function analyticsRequest(action: string, dateRange?: any, filters?
 export async function getQuickQuestions(): Promise<QuickQuestion[]> {
   try {
     // 首先嘗試使用 Supabase Edge Function
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('未登入或登入已過期')
+    }
+
     const { data, error } = await supabase.functions.invoke('admin-management', {
       body: {
         action: 'list',
         table: 'quick_questions',
-        filters: { orderBy: 'display_order', orderDirection: 'asc' }
+        filters: { orderBy: 'display_order', orderDirection: 'asc' },
+        token // 傳遞認證令牌
       }
     })
 
@@ -285,11 +373,17 @@ export async function getQuickQuestions(): Promise<QuickQuestion[]> {
 export async function createQuickQuestion(question: Partial<QuickQuestion>): Promise<QuickQuestion> {
   try {
     // 首先嘗試使用 Supabase Edge Function
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('未登入或登入已過期')
+    }
+
     const { data, error } = await supabase.functions.invoke('admin-management', {
       body: {
         action: 'create',
         table: 'quick_questions',
-        data: question
+        data: question,
+        token // 傳遞認證令牌
       }
     })
 
@@ -312,12 +406,18 @@ export async function createQuickQuestion(question: Partial<QuickQuestion>): Pro
 export async function updateQuickQuestion(id: number, question: Partial<QuickQuestion>): Promise<QuickQuestion> {
   try {
     // 首先嘗試使用 Supabase Edge Function
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('未登入或登入已過期')
+    }
+
     const { data, error } = await supabase.functions.invoke('admin-management', {
       body: {
         action: 'update',
         table: 'quick_questions',
         data: question,
-        id
+        id,
+        token // 傳遞認證令牌
       }
     })
 
@@ -340,11 +440,17 @@ export async function updateQuickQuestion(id: number, question: Partial<QuickQue
 export async function deleteQuickQuestion(id: number): Promise<void> {
   try {
     // 首先嘗試使用 Supabase Edge Function
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('未登入或登入已過期')
+    }
+
     await supabase.functions.invoke('admin-management', {
       body: {
         action: 'delete',
         table: 'quick_questions',
-        id
+        id,
+        token // 傳遞認證令牌
       }
     })
   } catch (error) {
@@ -358,11 +464,17 @@ export async function deleteQuickQuestion(id: number): Promise<void> {
 export async function bulkUpdateQuickQuestions(items: QuickQuestion[]): Promise<void> {
   try {
     // 首先嘗試使用 Supabase Edge Function
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('未登入或登入已過期')
+    }
+
     await supabase.functions.invoke('admin-management', {
       body: {
         action: 'bulk_update',
         table: 'quick_questions',
-        data: items
+        data: items,
+        token // 傳遞認證令牌
       }
     })
   } catch (error) {
@@ -548,15 +660,11 @@ export async function getBlockedQuestionsStats(dateRange: any) {
 
 export async function getStores() {
   try {
-    const { data, error } = await supabase
-      .from('stores')
-      .select('*')
-      .order('store_name')
-
-    if (error) throw error
+    // 使用管理員權限獲取商店列表
+    const data = await adminRequest('list', 'stores', null, null, { orderBy: 'store_name' })
     return data
   } catch (error) {
-    console.warn('Failed to fetch stores from database, using mock data:', error)
+    console.warn('Failed to fetch stores via admin API, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { getAllMockStores } = await import('./mockStores')
     const mockData = getAllMockStores()
@@ -912,11 +1020,14 @@ export async function deleteTrainingData(id: number) {
 // 商家資料管理
 export async function createStore(store: any) {
   console.log('createStore called with store:', store)
-  
+
   // 強化布林值轉換邏輯 - 明確處理各種輸入類型
-  // 使用新的 toBool 函數
+  // 使用新的 toBool 函數，正確處理 false 值
   const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
-    return toBool(value) || defaultValue
+    if (value === undefined || value === null) {
+      return defaultValue
+    }
+    return toBool(value)
   }
   
   const sanitizedStore = {
@@ -938,16 +1049,12 @@ export async function createStore(store: any) {
   console.log('=== 轉換完成 ===')
   
   try {
-    const { data, error } = await supabase
-      .from('stores')
-      .insert(sanitizedStore)
-      .select()
-      .single()
+    // 使用管理員權限創建商店
+    const data = await adminRequest('create', 'stores', sanitizedStore)
 
-    if (error) throw error
-    console.log('Database create successful:', data)
+    console.log('Admin database create successful:', data)
     console.log('DB 回傳的 is_partner_store:', data.is_partner_store, typeof data.is_partner_store)
-    
+
     // 確保回傳的資料包含正確的布林值
     const responseData = {
       ...data,
@@ -955,15 +1062,15 @@ export async function createStore(store: any) {
       is_safe_store: Boolean(data.is_safe_store),
       has_member_discount: Boolean(data.has_member_discount)
     }
-    
+
     console.log('最終回傳資料:', responseData)
     return responseData
   } catch (error) {
-    console.warn('Failed to create store in database, using mock data:', error)
+    console.warn('Failed to create store via admin API, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { createMockStore } = await import('./mockStores')
     const newStore = createMockStore(sanitizedStore)
-    
+
     // 確保 mock 資料也回傳正確的布林值
     const mockResponseData = {
       ...newStore,
@@ -971,7 +1078,7 @@ export async function createStore(store: any) {
       is_safe_store: Boolean(newStore.is_safe_store),
       has_member_discount: Boolean(newStore.has_member_discount)
     }
-    
+
     console.log('Mock 最終回傳資料:', mockResponseData)
     return mockResponseData
   }
@@ -979,11 +1086,14 @@ export async function createStore(store: any) {
 
 export async function updateStore(id: number, store: any) {
   console.log('updateStore called with id:', id, 'store:', store)
-  
+
   // 強化布林值轉換邏輯 - 明確處理各種輸入類型
-  // 使用新的 toBool 函數
+  // 使用新的 toBool 函數，正確處理 false 值
   const sanitizeBoolean = (value: any, defaultValue: boolean = false): boolean => {
-    return toBool(value) || defaultValue
+    if (value === undefined || value === null) {
+      return defaultValue
+    }
+    return toBool(value)
   }
   
   const sanitizedStore = {
@@ -1004,17 +1114,12 @@ export async function updateStore(id: number, store: any) {
   console.log('=== 轉換完成 ===')
   
   try {
-    const { data, error } = await supabase
-      .from('stores')
-      .update(sanitizedStore)
-      .eq('id', id)
-      .select()
-      .single()
+    // 使用管理員權限更新商店
+    const data = await adminRequest('update', 'stores', sanitizedStore, id)
 
-    if (error) throw error
-    console.log('Database update successful:', data)
+    console.log('Admin database update successful:', data)
     console.log('DB 回傳的 is_partner_store:', data.is_partner_store, typeof data.is_partner_store)
-    
+
     // 確保回傳的資料包含正確的布林值
     const responseData = {
       ...data,
@@ -1022,11 +1127,11 @@ export async function updateStore(id: number, store: any) {
       is_safe_store: Boolean(data.is_safe_store),
       has_member_discount: Boolean(data.has_member_discount)
     }
-    
+
     console.log('最終回傳資料:', responseData)
     return responseData
   } catch (error) {
-    console.warn('Failed to update store in database, using mock data:', error)
+    console.warn('Failed to update store via admin API, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { updateMockStore, createMockStore } = await import('./mockStores')
     const updatedStore = updateMockStore(id, sanitizedStore)
@@ -1060,14 +1165,10 @@ export async function updateStore(id: number, store: any) {
 
 export async function deleteStore(id: number) {
   try {
-    const { error } = await supabase
-      .from('stores')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
+    // 使用管理員權限刪除商店
+    await adminRequest('delete', 'stores', null, id)
   } catch (error) {
-    console.warn('Failed to delete store in database, using mock data:', error)
+    console.warn('Failed to delete store via admin API, using mock data:', error)
     // 如果數據庫失敗，使用模擬數據
     const { deleteMockStore } = await import('./mockStores')
     deleteMockStore(id)
