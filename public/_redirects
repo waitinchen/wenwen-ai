@@ -1,0 +1,5 @@
+# SPA fallback for admin routes
+/admin/* /index.html 200
+
+# Catch-all for client-side routing
+/* /index.html 200
